@@ -3,6 +3,16 @@
   "version": "1.0.0",
   "description": "Framework-agnostic primitives for Trueyy in the browser.",
   "license": "MIT",
+  "homepage": "https://github.com/Anti-Cheating/Hermes/tree/main/packages/web-core#readme",
+  "bugs": {
+    "url": "https://github.com/Anti-Cheating/Hermes/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Anti-Cheating/Hermes.git",
+    "directory": "packages/web-core"
+  },
+  "keywords": ["trueyy", "sdk", "interview", "ats", "websocket", "browser"],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -3,6 +3,16 @@
   "version": "1.0.0",
   "description": "Trueyy Server SDK for Node.js — mint session tokens, query sessions, handle webhooks.",
   "license": "MIT",
+  "homepage": "https://github.com/Anti-Cheating/Hermes/tree/main/packages/node#readme",
+  "bugs": {
+    "url": "https://github.com/Anti-Cheating/Hermes/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Anti-Cheating/Hermes.git",
+    "directory": "packages/node"
+  },
+  "keywords": ["trueyy", "sdk", "interview", "ats", "anti-cheating", "monitoring", "webhooks"],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
