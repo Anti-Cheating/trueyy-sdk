@@ -237,4 +237,4 @@ import type {
 
 [MIT](../../LICENSE) © Trueyy
 
-Issues, PRs, and discussions: [github.com/Anti-Cheating/Hermes](https://github.com/Anti-Cheating/Hermes)
+Issues, PRs, and discussions: [github.com/Anti-Cheating/trueyy-sdk](https://github.com/Anti-Cheating/trueyy-sdk)

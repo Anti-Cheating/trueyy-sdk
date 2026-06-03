@@ -321,8 +321,8 @@ A full Express integration lives in this monorepo:
 Clone and run:
 
 ```bash
-git clone https://github.com/Anti-Cheating/Hermes.git
-cd Hermes
+git clone https://github.com/Anti-Cheating/trueyy-sdk.git
+cd trueyy-sdk
 pnpm install
 TRUEYY_API_KEY=tk_test_… pnpm -F express-ats dev
 ```
@@ -339,4 +339,4 @@ V1 contract is **frozen** — additive changes only. Breaking changes will ship 
 
 [MIT](../../LICENSE) © Trueyy
 
-Issues, PRs, and discussions: [github.com/Anti-Cheating/Hermes](https://github.com/Anti-Cheating/Hermes)
+Issues, PRs, and discussions: [github.com/Anti-Cheating/trueyy-sdk](https://github.com/Anti-Cheating/trueyy-sdk)

@@ -295,8 +295,8 @@ A full React app embedding the SDK lives in this monorepo:
 Clone and run:
 
 ```bash
-git clone https://github.com/Anti-Cheating/Hermes.git
-cd Hermes
+git clone https://github.com/Anti-Cheating/trueyy-sdk.git
+cd trueyy-sdk
 pnpm install
 pnpm -F react-ats dev
 # Open http://localhost:5173/?interviewer_token=<paste a real JWT>
@@ -326,4 +326,4 @@ The data plane lives in [`@trueyy/web-core`](https://www.npmjs.com/package/@true
 
 [MIT](../../LICENSE) © Trueyy
 
-Issues, PRs, and discussions: [github.com/Anti-Cheating/Hermes](https://github.com/Anti-Cheating/Hermes)
+Issues, PRs, and discussions: [github.com/Anti-Cheating/trueyy-sdk](https://github.com/Anti-Cheating/trueyy-sdk)

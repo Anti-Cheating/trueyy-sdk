@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "React components for embedding Trueyy interview monitoring.",
   "license": "MIT",
-  "homepage": "https://github.com/Anti-Cheating/Hermes/tree/main/packages/web-react#readme",
+  "homepage": "https://github.com/Anti-Cheating/trueyy-sdk/tree/main/packages/web-react#readme",
   "bugs": {
-    "url": "https://github.com/Anti-Cheating/Hermes/issues"
+    "url": "https://github.com/Anti-Cheating/trueyy-sdk/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Anti-Cheating/Hermes.git",
+    "url": "git+https://github.com/Anti-Cheating/trueyy-sdk.git",
     "directory": "packages/web-react"
   },
   "keywords": ["trueyy", "sdk", "interview", "ats", "react", "components", "monitoring"],

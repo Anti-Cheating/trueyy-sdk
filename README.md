@@ -1,6 +1,11 @@
-# Hermes — Trueyy SDK
+# Trueyy SDK
 
 > The official Trueyy SDK. Embed AI-powered interview integrity monitoring into your ATS in under 50 lines of code.
+
+| Package | For | Install |
+|---|---|---|
+| [`@trueyy/node`](./packages/node) | Backend (Node 18+) | `npm i @trueyy/node` |
+| [`@trueyy/web`](./packages/web-react) | React frontend | `npm i @trueyy/web` |
 
 Trueyy detects cheating during remote technical interviews — AI assistants, suspicious applications, paste behavior, keystroke patterns, and screen content — and surfaces it as live risk pulses, 30-second window analyses, and a final report. This SDK is how your applicant tracking system plugs into the platform.
 
