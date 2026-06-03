@@ -1,0 +1,15 @@
+{
+  "name": "trueyy-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Trueyy SDK monorepo (@trueyy/node, @trueyy/web-core, @trueyy/web)",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

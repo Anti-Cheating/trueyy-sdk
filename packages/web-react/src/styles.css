@@ -1,0 +1,67 @@
+/* Trueyy default theme. ATSes can override via TrueyyProvider theme prop
+ * or by replacing/extending these class names. */
+.trueyy-root {
+  --trueyy-primary: #3b82f6;
+  --trueyy-bg: #ffffff;
+  --trueyy-text: #1f2937;
+  --trueyy-muted: #6b7280;
+  --trueyy-radius: 8px;
+  --trueyy-border: #e5e7eb;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--trueyy-text);
+  background: var(--trueyy-bg);
+}
+
+.trueyy-monitor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+.trueyy-card {
+  border: 1px solid var(--trueyy-border);
+  border-radius: var(--trueyy-radius);
+  padding: 12px;
+}
+
+.trueyy-risk-pulse {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-left: 3px solid var(--trueyy-primary);
+  margin-bottom: 4px;
+}
+
+.trueyy-risk-pulse--critical { border-left-color: #ef4444; }
+.trueyy-risk-pulse--warning  { border-left-color: #f59e0b; }
+.trueyy-risk-pulse--info     { border-left-color: #3b82f6; }
+
+.trueyy-join {
+  max-width: 480px;
+  margin: 24px auto;
+  padding: 24px;
+  border: 1px solid var(--trueyy-border);
+  border-radius: var(--trueyy-radius);
+}
+
+.trueyy-join__step {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.trueyy-button {
+  background: var(--trueyy-primary);
+  color: white;
+  border: none;
+  border-radius: var(--trueyy-radius);
+  padding: 8px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.trueyy-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
