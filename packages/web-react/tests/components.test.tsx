@@ -86,13 +86,16 @@ test("TrueyyReplay fetches + renders the session detail", async () => {
     session_id: "s1",
     title: "Final round — Alice",
     status: "ENDED",
-    transcripts: [{ speaker: "candidate", text: "Here is my solution.", captured_at: new Date().toISOString() }],
-    risk_pulses: [{ kind: "ai_tool", severity: "critical", occurred_at: new Date().toISOString() }],
+    transcripts: [{ speaker_role: "candidate" as const, text: "Here is my solution.", captured_at: new Date().toISOString() }],
+    detections: [{ categoryLabel: "AI Assistant", riskLevel: "CRITICAL", apps: ["ChatGPT"], occurred_at: new Date().toISOString() }],
     windows: [{ risk: "high", score: 80, summary: "Pasted code", start_time: new Date().toISOString() }],
   };
   render(<TrueyyReplay sessionId="s1" fetchSessionDetail={async () => detail} />);
   await waitFor(() => assert.ok(getByText("Final round — Alice")), { timeout: 4000 });
   assert.ok(getByText(/Here is my solution/));
+  // corrected shapes must render: detection categoryLabel + speaker_role
+  assert.ok(getByText(/AI Assistant/), "renders detection categoryLabel");
+  assert.ok(getByText(/candidate:/), "renders transcript speaker_role");
 });
 
 test("TrueyyReplay shows an error when the fetch rejects", async () => {

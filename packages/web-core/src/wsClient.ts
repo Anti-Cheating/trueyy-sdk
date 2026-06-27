@@ -5,6 +5,8 @@ export interface WsClientOptions {
   baseUrl: string;
   token: string;
   onReconnect?: () => void;
+  /** Fires on every (re)connect — used to (re)join the session room. */
+  onConnect?: () => void;
 }
 
 /**
@@ -30,6 +32,9 @@ export class WsClient {
       reconnectionDelayMax: 10000,
     });
 
+    // "connect" fires on the initial connection AND every reconnection —
+    // socket.io room membership is per-connection, so we re-join each time.
+    this.socket.on("connect", () => this.opts.onConnect?.());
     this.socket.on("reconnect", () => this.opts.onReconnect?.());
 
     // Replay any registered listeners onto the new socket.

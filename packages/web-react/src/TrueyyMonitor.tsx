@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTrueyyClient } from "./TrueyyProvider.js";
 import { useRiskStream, useTranscriptStream, useWindowResults } from "./hooks.js";
 import type { RiskPulseEvent } from "@trueyy/web-core";
@@ -8,10 +9,10 @@ export interface TrueyyMonitorProps {
 
 /**
  * Interviewer's live monitoring panel. Renders three columns:
- *   - Risk pulses
+ *   - Risk pulses (detections, keyboard alerts, activities)
  *   - Window results (every 30s)
  *   - Live transcript
- * Plus a "Capture now" button.
+ * Plus a "Capture now" button. Payload shapes mirror Cortex's socket events.
  */
 export function TrueyyMonitor({ onRiskAlert }: TrueyyMonitorProps) {
   const client = useTrueyyClient();
@@ -19,10 +20,10 @@ export function TrueyyMonitor({ onRiskAlert }: TrueyyMonitorProps) {
   const windows = useWindowResults();
   const transcript = useTranscriptStream();
 
-  // Forward alerts to the host app.
-  if (onRiskAlert) {
-    risks[0] && onRiskAlert(risks[0]);
-  }
+  // Forward the newest pulse to the host app (effect, not during render).
+  useEffect(() => {
+    if (onRiskAlert && risks[0]) onRiskAlert(risks[0]);
+  }, [risks, onRiskAlert]);
 
   return (
     <div className="trueyy-monitor">
@@ -32,10 +33,22 @@ export function TrueyyMonitor({ onRiskAlert }: TrueyyMonitorProps) {
           Capture now
         </button>
         <div>
-          {risks.map((r, i) => (
-            <div key={i} className={`trueyy-risk-pulse trueyy-risk-pulse--${r.severity}`}>
-              <span>{r.kind}</span>
-              <span>{r.severity}</span>
+          {risks.map((pulse, i) => (
+            <div key={i} className="trueyy-risk-pulse">
+              {pulse.detections.map((d, j) => (
+                <div key={`d${j}`} className={`trueyy-risk-pulse--${d.riskLevel.toLowerCase()}`}>
+                  <strong>{d.categoryLabel}</strong> — {d.apps.join(", ")} <span>({d.riskLevel})</span>
+                </div>
+              ))}
+              {(pulse.keyboardAlerts ?? []).map((k, j) => (
+                <div key={`k${j}`} className={`trueyy-risk-pulse--${k.riskLevel.toLowerCase()}`}>
+                  {k.label}
+                  {k.app ? ` — ${k.app}` : ""}
+                </div>
+              ))}
+              {pulse.activities.map((a, j) => (
+                <div key={`a${j}`} className="trueyy-muted">{a}</div>
+              ))}
             </div>
           ))}
           {risks.length === 0 && <p className="trueyy-muted">No alerts yet.</p>}
@@ -59,7 +72,7 @@ export function TrueyyMonitor({ onRiskAlert }: TrueyyMonitorProps) {
         <div style={{ maxHeight: 240, overflowY: "auto" }}>
           {transcript.map((t, i) => (
             <p key={i}>
-              <strong>{t.speaker}:</strong> {t.text}
+              <strong>{t.speaker_role ?? "speaker"}:</strong> {t.text}
             </p>
           ))}
         </div>

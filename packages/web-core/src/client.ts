@@ -26,14 +26,23 @@ export interface TrueyyClientOptions {
 export class TrueyyClient {
   private opts: TrueyyClientOptions;
   private ws: WsClient;
+  private sessionId: string | null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(opts: TrueyyClientOptions) {
     this.opts = { baseUrl: "https://api.trueyy.com", ...opts };
+    // The session id lives in the JWT `sub` claim. Cortex broadcasts every
+    // monitoring event to the room `session:{id}`, and a socket only joins
+    // that room by emitting `join-session` — so we must do it on each connect
+    // or <TrueyyMonitor> receives nothing.
+    this.sessionId = decodeJwtSub(opts.token);
     this.ws = new WsClient({
       baseUrl: this.opts.baseUrl!,
       token: opts.token,
       onReconnect: () => {},
+      onConnect: () => {
+        if (this.sessionId) this.ws.emit("join-session", this.sessionId);
+      },
     });
   }
 
@@ -108,4 +117,16 @@ function decodeJwtExpMs(token: string): number | null {
     /* ignore */
   }
   return null;
+}
+
+/** Read the session id from the JWT `sub` claim (no signature check). */
+function decodeJwtSub(token: string): string | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const payload = JSON.parse(atob(parts[1]!.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload?.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
 }

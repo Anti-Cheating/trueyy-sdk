@@ -1,57 +1,113 @@
-// Mirror of @trueyy/node's types.ts (kept in sync manually until OpenAPI
-// generation is wired). Browser-safe — no Node-only imports.
+// Socket event payloads — these MIRROR CORTEX'S socketService emit shapes
+// exactly (the same events Skyview's useRiskSocket consumes). Keep them in
+// sync with Cortex/src/services/socketService.ts.
 
 export type SessionRole = "candidate" | "interviewer" | "helper";
 export type SessionStatus = "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED";
 
+// ── risk-pulse ──
+export interface PulseDetection {
+  categoryId: string;
+  categoryLabel: string;
+  riskLevel: "CRITICAL" | "HIGH" | "MEDIUM" | "CLEAN";
+  riskScore: number;
+  apps: string[];
+  matchedKeywords: string[];
+}
+export interface PulseKeyboardAlert {
+  type: string;
+  label: string;
+  riskLevel: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  key?: string;
+  app?: string;
+  fromApp?: string;
+}
 export interface RiskPulseEvent {
-  session_id: string;
-  kind: string;
-  severity: "info" | "warning" | "critical";
-  evidence: Record<string, unknown>;
+  detections: PulseDetection[];
+  activities: string[];
+  keyboardAlerts?: PulseKeyboardAlert[];
+  timestamp: string;
 }
 
+// ── window-result ──
+export interface ModalityRisk {
+  risk?: string;
+  score?: number;
+  summary?: string;
+}
 export interface WindowResultEvent {
-  session_id: string;
   window_id: string;
+  session_id: string;
   risk: string;
   score: number;
   summary: string;
-  modality_breakdown?: Record<string, unknown>;
+  confidence?: string;
+  status: string;
+  processed_at: string;
+  per_modality?: {
+    app_metadata?: ModalityRisk;
+    keystroke?: ModalityRisk;
+    voice?: ModalityRisk;
+  };
+  correlations?: Array<Record<string, unknown>>;
 }
 
+// ── live-transcript (interim) + stable-transcript (final, deduped) ──
 export interface LiveTranscriptEvent {
-  session_id: string;
-  speaker: "candidate" | "interviewer";
   text: string;
   is_final: boolean;
-  started_at?: string;
-  ended_at?: string;
+  timestamp: string;
+  speaker_role?: "interviewer" | "candidate";
+  participant_id?: string;
+  start_ms?: number;
+  end_ms?: number;
+}
+export interface StableTranscriptEvent {
+  transcript_id: string;
+  speaker_role: "candidate" | "interviewer";
+  text: string;
+  is_final: true;
+  timestamp: string;
+  start_ms: number;
+  end_ms: number;
+  participant_id?: string;
+  confidence: number;
 }
 
+// ── candidate-status / interviewer-status ──
 export interface CandidateStatusEvent {
-  session_id: string;
+  sessionId: string;
   extension_installed?: boolean;
   screen_recording?: boolean;
   mic_granted?: boolean;
+  keyboard_granted?: boolean;
   joined?: boolean;
 }
 
+// ── image-analysis-result ──
 export interface ImageAnalysisResultEvent {
+  analysis_id: string;
   session_id: string;
-  image_id: string;
+  status: string;
   risk: string;
-  findings: Record<string, unknown>;
+  score: number;
+  summary: string;
+  image_count: number;
+  processed_at: string;
+  image_signals: string[];
+  image_evidence: string[];
+  thumbnail_urls: string[];
 }
 
 /**
- * Map of socket event names → typed payloads. Used by TrueyyClient's
- * typed `.on(event, listener)` overloads.
+ * Map of socket event names → typed payloads. Used by TrueyyClient's typed
+ * `.on(event, listener)` overloads.
  */
 export interface SocketEventMap {
   "risk-pulse": RiskPulseEvent;
   "window-result": WindowResultEvent;
   "live-transcript": LiveTranscriptEvent;
+  "stable-transcript": StableTranscriptEvent;
   "candidate-status": CandidateStatusEvent;
   "image-analysis-result": ImageAnalysisResultEvent;
 }

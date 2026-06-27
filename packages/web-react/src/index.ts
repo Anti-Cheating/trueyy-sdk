@@ -16,7 +16,11 @@ export { useRiskStream, useWindowResults, useTranscriptStream } from "./hooks.js
 export type {
   SessionRole,
   RiskPulseEvent,
+  PulseDetection,
+  PulseKeyboardAlert,
   WindowResultEvent,
   LiveTranscriptEvent,
+  StableTranscriptEvent,
   CandidateStatusEvent,
+  ImageAnalysisResultEvent,
 } from "@trueyy/web-core";

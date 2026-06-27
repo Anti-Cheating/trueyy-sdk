@@ -58,7 +58,7 @@ function InterviewerPage({ interviewerToken }) {
       token={interviewerToken}
       theme={{ primary: "#3B82F6", radius: "8px" }}
       onTokenExpiring={async () => {
-        // Hit YOUR backend, which calls trueyy.sessions.refreshToken via @trueyy/node
+        // Hit YOUR backend, which calls trueyy.tokens.mint(round_id, role) via @trueyy/node
         const res = await fetch("/our-ats/refresh-trueyy-token");
         return res.text();
       }}
@@ -103,7 +103,7 @@ function ReviewPage({ sessionId }) {
     <TrueyyReplay
       sessionId={sessionId}
       fetchSessionDetail={async (id) => {
-        // YOUR backend, which calls trueyy.sessions.get(id) via @trueyy/node
+        // YOUR backend, which calls trueyy.reports.get(round_id) via @trueyy/node
         const res = await fetch(`/our-ats/sessions/${id}/replay`);
         return res.json();
       }}

@@ -2,11 +2,6 @@
 
 > The official Trueyy SDK. Embed AI-powered interview integrity monitoring into your ATS in under 50 lines of code.
 
-| Package | For | Install |
-|---|---|---|
-| [`@trueyy/node`](./packages/node) | Backend (Node 18+) | `npm i @trueyy/node` |
-| [`@trueyy/web`](./packages/web-react) | React frontend | `npm i @trueyy/web` |
-
 Trueyy detects cheating during remote technical interviews — AI assistants, suspicious applications, paste behavior, keystroke patterns, and screen content — and surfaces it as live risk pulses, 30-second window analyses, and a final report. This SDK is how your applicant tracking system plugs into the platform.
 
 ## What's in the box
@@ -74,9 +69,8 @@ await trueyy.interviews.addRound(id, {
 
 The interview (`id`) groups its rounds; `trueyy.interviews.get(id)` returns each
 round with its own analysis summary. Per-round report: `trueyy.reports.get(round_id)`.
-
-Omit `interview_external_id` and the session is auto-wrapped in its own single-round
-interview — so existing integrations keep working unchanged.
+Cancelling the interview (`trueyy.interviews.cancel(id)`) cancels every round that
+hasn't started yet.
 
 **Frontend (React):**
 
@@ -84,7 +78,8 @@ interview — so existing integrations keep working unchanged.
 import { TrueyyProvider, TrueyyMonitor } from "@trueyy/web";
 import "@trueyy/web/styles.css";
 
-<TrueyyProvider token={session.interviewer_token}>
+// `interviewerToken` comes from your backend — trueyy.tokens.mint(round_id, "interviewer")
+<TrueyyProvider token={interviewerToken}>
   <TrueyyMonitor onRiskAlert={(e) => analytics.track("risk", e)} />
 </TrueyyProvider>
 ```
