@@ -1,11 +1,28 @@
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
-const CORTEX_DIR = "/Users/darshvaghela/Documents/Anti Cheating/Cortex";
-const PORT = 4568;
+// These suites run against your LOCAL Cortex checkout — not npm, not a deploy.
+// By default Cortex is expected as a sibling of trueyy-sdk; override with the
+// CORTEX_DIR env var (e.g. `CORTEX_DIR=/path/to/Cortex pnpm -F @trueyy/node test`).
+const SDK_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+const CORTEX_DIR = process.env.CORTEX_DIR ?? path.resolve(SDK_ROOT, "../Cortex");
+const PORT = Number(process.env.SDK_TEST_CORTEX_PORT ?? 4568);
 const BASE = `http://127.0.0.1:${PORT}`;
 const TSX = `${CORTEX_DIR}/node_modules/.bin/tsx`;
+
+function assertCortex(): void {
+  if (!existsSync(path.join(CORTEX_DIR, "src/index.ts"))) {
+    throw new Error(
+      `Cannot find the Cortex backend at ${CORTEX_DIR}.\n` +
+        `These SDK tests boot the real Cortex server. Either check out Cortex as a ` +
+        `sibling of trueyy-sdk, or set CORTEX_DIR to its path:\n` +
+        `  CORTEX_DIR=/path/to/Cortex pnpm -F @trueyy/node test`,
+    );
+  }
+}
 
 export interface SdkSeed {
   apiKey: string;
@@ -27,6 +44,7 @@ let proc: ChildProcess | null = null;
 
 /** Spawn the REAL Cortex server against cortex_test, then seed a tenant + key. */
 export async function startBackend(): Promise<Backend> {
+  assertCortex();
   const dbUrl = cortexTestDbUrl();
   const childEnv = { ...process.env, DATABASE_URL: dbUrl, PORT: String(PORT), TEST_MODE: "true", NODE_ENV: "test" };
 
