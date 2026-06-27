@@ -17,7 +17,8 @@ export interface CreateSessionInput {
   interviewer: Person;
   scheduled_start_at: string; // ISO 8601
   scheduled_end_at: string; // ISO 8601
-  meeting_url?: string | null;
+  /** Required — every interview is meeting-link based (zoom / meet / teams). */
+  meeting_url: string;
   title?: string;
   description?: string;
   timezone?: string;

@@ -35,6 +35,7 @@ const session = await trueyy.sessions.create({
   interviewer: { email: "bob@you.com", first_name: "Bob", last_name: "Y" },
   scheduled_start_at: req.body.start,
   scheduled_end_at: req.body.end,
+  meeting_url: req.body.meeting_url,   // required (zoom / meet / teams link)
 });
 // → returns { candidate_token, interviewer_token, helper_token, process_id, round_name, ... }
 ```
@@ -54,6 +55,7 @@ await trueyy.sessions.create({
   candidate:   { email: "alice@x.com", first_name: "Alice", last_name: "X" },
   interviewer: { email: "bob@you.com", first_name: "Bob", last_name: "Y" },
   scheduled_start_at: r1.start, scheduled_end_at: r1.end,
+  meeting_url: r1.meeting_url,
 });
 
 // Round 2 — technical with Carol (same interview_external_id)
@@ -64,6 +66,7 @@ await trueyy.sessions.create({
   candidate:   { email: "alice@x.com", first_name: "Alice", last_name: "X" },
   interviewer: { email: "carol@you.com", first_name: "Carol", last_name: "Z" },
   scheduled_start_at: r2.start, scheduled_end_at: r2.end,
+  meeting_url: r2.meeting_url,
 });
 ```
 
