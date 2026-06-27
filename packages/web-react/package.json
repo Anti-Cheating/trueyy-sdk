@@ -12,7 +12,15 @@
     "url": "git+https://github.com/Anti-Cheating/trueyy-sdk.git",
     "directory": "packages/web-react"
   },
-  "keywords": ["trueyy", "sdk", "interview", "ats", "react", "components", "monitoring"],
+  "keywords": [
+    "trueyy",
+    "sdk",
+    "interview",
+    "ats",
+    "react",
+    "components",
+    "monitoring"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -24,10 +32,16 @@
     },
     "./styles.css": "./src/styles.css"
   },
-  "files": ["dist", "src/styles.css", "README.md"],
+  "files": [
+    "dist",
+    "src/styles.css",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --tsconfig tsconfig.json --import ./tests/_support/setup.ts --test --test-force-exit tests/*.test.tsx",
+    "test:cov": "tsx --tsconfig tsconfig.json --import ./tests/_support/setup.ts --test --test-force-exit --experimental-test-coverage --test-coverage-include=src/** tests/*.test.tsx"
   },
   "peerDependencies": {
     "react": ">=17",
