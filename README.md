@@ -36,8 +36,39 @@ const session = await trueyy.sessions.create({
   scheduled_start_at: req.body.start,
   scheduled_end_at: req.body.end,
 });
-// → returns { candidate_token, interviewer_token, helper_token, ... }
+// → returns { candidate_token, interviewer_token, helper_token, process_id, round_name, ... }
 ```
+
+### Multi-round interviews
+
+A candidate often has several rounds — different interviewers, different days. Pass
+the same `interview_external_id` for each round and Trueyy groups them into one
+interview (the parent **process**) as ordered rounds:
+
+```ts
+// Round 1 — screening with Bob
+await trueyy.sessions.create({
+  external_id: "req-42-r1",
+  interview_external_id: "req-42",            // ← the interview
+  round_name: "Phone screen",
+  candidate:   { email: "alice@x.com", first_name: "Alice", last_name: "X" },
+  interviewer: { email: "bob@you.com", first_name: "Bob", last_name: "Y" },
+  scheduled_start_at: r1.start, scheduled_end_at: r1.end,
+});
+
+// Round 2 — technical with Carol (same interview_external_id)
+await trueyy.sessions.create({
+  external_id: "req-42-r2",
+  interview_external_id: "req-42",            // ← same interview → round 2
+  round_name: "Technical — Round 2",
+  candidate:   { email: "alice@x.com", first_name: "Alice", last_name: "X" },
+  interviewer: { email: "carol@you.com", first_name: "Carol", last_name: "Z" },
+  scheduled_start_at: r2.start, scheduled_end_at: r2.end,
+});
+```
+
+Omit `interview_external_id` and the session is auto-wrapped in its own single-round
+interview — so existing integrations keep working unchanged.
 
 **Frontend (React):**
 

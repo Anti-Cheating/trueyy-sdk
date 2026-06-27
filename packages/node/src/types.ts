@@ -22,11 +22,25 @@ export interface CreateSessionInput {
   description?: string;
   timezone?: string;
   features?: Record<string, boolean>;
+  /**
+   * Optional multi-round grouping. Supply your own ID for the *interview*
+   * (the parent process) and every session created with the same
+   * `interview_external_id` is attached to it as an ordered round — so a
+   * candidate's rounds (with different interviewers) appear as one interview.
+   * Omit and the session is auto-wrapped in its own single-round interview.
+   */
+  interview_external_id?: string;
+  /** Label for this round, e.g. "Technical — Round 2". */
+  round_name?: string;
 }
 
 export interface CreatedSession {
   session_id: string;
   external_id: string | null;
+  /** The parent interview process this session belongs to (its round). */
+  process_id: string | null;
+  round_name: string | null;
+  round_order: number | null;
   candidate_token: string;
   interviewer_token: string;
   helper_token: string;
@@ -42,6 +56,9 @@ export interface CreatedSession {
 export interface Session {
   id: string;
   external_id: string | null;
+  process_id?: string | null;
+  round_name?: string | null;
+  round_order?: number | null;
   status: SessionStatus;
   title: string;
   scheduled_start_at: string;
