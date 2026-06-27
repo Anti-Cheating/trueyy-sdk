@@ -29,46 +29,51 @@ import { Trueyy } from "@trueyy/node";
 
 const trueyy = new Trueyy({ apiKey: process.env.TRUEYY_API_KEY! });
 
-const session = await trueyy.sessions.create({
-  external_id: req.body.interview_id,
-  candidate: { email: "alice@x.com", first_name: "Alice", last_name: "X" },
-  interviewer: { email: "bob@you.com", first_name: "Bob", last_name: "Y" },
-  scheduled_start_at: req.body.start,
-  scheduled_end_at: req.body.end,
-  meeting_url: req.body.meeting_url,   // required (zoom / meet / teams link)
+// 1. make sure the interviewer exists (once — they accept via email, then
+//    appear in team.members with an id you reference as interviewer_user_id)
+await trueyy.team.invite({ email: "bob@you.com", role: "Member" });
+const { members } = await trueyy.team.members();
+const bob = members.find((m) => m.email === "bob@you.com")!;
+
+// 2. create the interview + round 1
+const { id, round_id } = await trueyy.interviews.create({
+  role: "Senior Backend",
+  candidate_email: "alice@x.com",
+  candidate_first_name: "Alice",
+  candidate_last_name: "X",
+  first_round: {
+    round_name: "Phone screen",
+    interviewer_user_id: bob.id,
+    scheduled_start_at: r1.start,
+    scheduled_end_at: r1.end,
+    timezone: "America/New_York",
+    meeting_link: r1.meeting_url,   // required (zoom / meet / teams)
+  },
 });
-// → returns { candidate_token, interviewer_token, helper_token, process_id, round_name, ... }
+
+// 3. mint a short-lived browser token to embed the candidate join flow
+const candidate = await trueyy.tokens.mint(round_id, "candidate");
 ```
 
 ### Multi-round interviews
 
-A candidate often has several rounds — different interviewers, different days. Pass
-the same `interview_external_id` for each round and Trueyy groups them into one
-interview (the parent **process**) as ordered rounds:
+A candidate often has several rounds — different interviewers, different days.
+Add each round to the same interview; each round references its own (pre-existing)
+interviewer:
 
 ```ts
-// Round 1 — screening with Bob
-await trueyy.sessions.create({
-  external_id: "req-42-r1",
-  interview_external_id: "req-42",            // ← the interview
-  round_name: "Phone screen",
-  candidate:   { email: "alice@x.com", first_name: "Alice", last_name: "X" },
-  interviewer: { email: "bob@you.com", first_name: "Bob", last_name: "Y" },
-  scheduled_start_at: r1.start, scheduled_end_at: r1.end,
-  meeting_url: r1.meeting_url,
-});
-
-// Round 2 — technical with Carol (same interview_external_id)
-await trueyy.sessions.create({
-  external_id: "req-42-r2",
-  interview_external_id: "req-42",            // ← same interview → round 2
+await trueyy.interviews.addRound(id, {
   round_name: "Technical — Round 2",
-  candidate:   { email: "alice@x.com", first_name: "Alice", last_name: "X" },
-  interviewer: { email: "carol@you.com", first_name: "Carol", last_name: "Z" },
-  scheduled_start_at: r2.start, scheduled_end_at: r2.end,
-  meeting_url: r2.meeting_url,
+  interviewer_user_id: carol.id,      // a different interviewer, already on the team
+  scheduled_start_at: r2.start,
+  scheduled_end_at: r2.end,
+  timezone: "America/New_York",
+  meeting_link: r2.meeting_url,
 });
 ```
+
+The interview (`id`) groups its rounds; `trueyy.interviews.get(id)` returns each
+round with its own analysis summary. Per-round report: `trueyy.reports.get(round_id)`.
 
 Omit `interview_external_id` and the session is auto-wrapped in its own single-round
 interview — so existing integrations keep working unchanged.

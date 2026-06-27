@@ -11,47 +11,48 @@ export interface Person {
   last_name: string;
 }
 
-export interface CreateSessionInput {
-  external_id: string;
-  candidate: Person;
-  interviewer: Person;
+export interface RoundInput {
+  round_name: string;
+  /** Must pre-exist — invite via team.invite, then find the id via team.members. */
+  interviewer_user_id: string;
   scheduled_start_at: string; // ISO 8601
   scheduled_end_at: string; // ISO 8601
-  /** Required — every interview is meeting-link based (zoom / meet / teams). */
-  meeting_url: string;
-  title?: string;
-  description?: string;
-  timezone?: string;
-  features?: Record<string, boolean>;
-  /**
-   * Optional multi-round grouping. Supply your own ID for the *interview*
-   * (the parent process) and every session created with the same
-   * `interview_external_id` is attached to it as an ordered round — so a
-   * candidate's rounds (with different interviewers) appear as one interview.
-   * Omit and the session is auto-wrapped in its own single-round interview.
-   */
-  interview_external_id?: string;
-  /** Label for this round, e.g. "Technical — Round 2". */
-  round_name?: string;
+  timezone: string;
+  meeting_link: string; // required (zoom / meet / teams)
 }
 
-export interface CreatedSession {
-  session_id: string;
-  external_id: string | null;
-  /** The parent interview process this session belongs to (its round). */
-  process_id: string | null;
+export interface CreateInterviewInput {
+  role: string;
+  description?: string | null;
+  candidate_email: string;
+  candidate_first_name: string;
+  candidate_last_name: string;
+  first_round: RoundInput;
+}
+
+export interface RoundSummary {
+  id: string;
   round_name: string | null;
   round_order: number | null;
-  candidate_token: string;
-  interviewer_token: string;
-  helper_token: string;
-  candidate_token_expires_at: string;
-  interviewer_token_expires_at: string;
-  helper_token_expires_at: string;
-  status: SessionStatus;
-  scheduled_start_at: string;
-  scheduled_end_at: string;
-  created: boolean;
+  status: string;
+  interviewer: { first_name: string; last_name: string } | null;
+  analysis: { overall_score: number | null; risk_level: string | null } | null;
+}
+
+export interface Interview {
+  id: string;
+  role: string;
+  candidate: { first_name: string; last_name: string; email: string };
+  status: "IN_PROGRESS" | "COMPLETED";
+  rounds?: RoundSummary[];
+}
+
+export interface Member {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
 }
 
 export interface Session {
@@ -81,22 +82,13 @@ export interface RefreshedToken {
   role: SessionRole;
 }
 
-export interface ListSessionsFilter {
-  limit?: number;
-  cursor?: string;
-  status?: SessionStatus;
+export interface Page<T> {
+  items: T[];
+  total: number;
 }
 
-export interface Paginated<T> {
-  sessions: T[];
-  next_cursor: string | null;
-}
-
-export interface Report {
-  session_id: string;
-  report_url: string;
-  expires_at: string;
-}
+/** Per-round analysis (shape mirrors interview_session_participants.analysis). */
+export type Report = Record<string, unknown>;
 
 // Webhook event envelope (all events share this shape).
 export type WebhookEventType =
