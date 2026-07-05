@@ -42,7 +42,7 @@ export interface RoundSummary {
 export interface Interview {
   id: string;
   role: string;
-  candidate: { first_name: string; last_name: string; email: string };
+  candidate: { id: string; first_name: string; last_name: string; email: string };
   status: "IN_PROGRESS" | "COMPLETED";
   rounds?: RoundSummary[];
 }
@@ -89,6 +89,25 @@ export interface Page<T> {
 
 /** Per-round analysis (shape mirrors interview_session_participants.analysis). */
 export type Report = Record<string, unknown>;
+
+/** Receipt returned by candidates.erase — proof the erasure was recorded. */
+export interface EraseReceipt {
+  receipt: { id: string; requested_at: string };
+}
+
+/** An audit-trail entry (customer-scoped view). */
+export interface AuditEntry {
+  id: string;
+  action: string;
+  actor_id: string | null;
+  actor_name?: string | null;
+  actor_role: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  details: unknown;
+  company_id: string | null;
+  created_at: string;
+}
 
 // Webhook event envelope (all events share this shape).
 export type WebhookEventType =

@@ -5,6 +5,8 @@ import { Billing } from "./billing.js";
 import { Reports } from "./reports.js";
 import { Tokens } from "./tokens.js";
 import { Webhooks } from "./webhooks.js";
+import { Candidates } from "./candidates.js";
+import { Audit } from "./audit.js";
 
 export class Trueyy {
   /** Interviews = process + rounds (the same model as the dashboard). */
@@ -19,6 +21,10 @@ export class Trueyy {
   public readonly tokens: Tokens;
   /** Verify inbound webhook signatures. */
   public readonly webhooks: Webhooks;
+  /** GDPR candidate data erasure (company-scoped). */
+  public readonly candidates: Candidates;
+  /** Read-only audit trail (customer-scoped view). */
+  public readonly audit: Audit;
 
   constructor(opts: ClientOptions) {
     if (!opts?.apiKey) {
@@ -31,6 +37,8 @@ export class Trueyy {
     this.reports = new Reports(http);
     this.tokens = new Tokens(http);
     this.webhooks = new Webhooks();
+    this.candidates = new Candidates(http);
+    this.audit = new Audit(http);
   }
 }
 

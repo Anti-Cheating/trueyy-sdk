@@ -108,6 +108,27 @@ app.post(
 );
 ```
 
+### Compliance — candidate erasure & audit
+
+Wire a candidate-data erasure into your own "delete applicant" flow. It's
+company-scoped — only your interviews' recordings, transcripts, and screenshots
+are removed; the candidate's data with other companies is untouched, and consent
+and audit records are retained:
+
+```ts
+const { candidate } = await trueyy.interviews.get(id);
+const { receipt } = await trueyy.candidates.erase(candidate.id);
+// store receipt.id / receipt.requested_at as proof of the erasure
+```
+
+Pull your account's audit trail (your own people and API keys — not Trueyy
+platform operations), e.g. to mirror into your SIEM:
+
+```ts
+const { items } = await trueyy.audit.list({ action: "interview.create", limit: 100 });
+const entry = await trueyy.audit.get(items[0].id);
+```
+
 ## Architecture
 
 - **Multi-tenant**: every API call is scoped to your tenant by your `tk_live_*` token. Cross-tenant data access is impossible by design.

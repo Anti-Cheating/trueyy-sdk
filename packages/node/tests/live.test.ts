@@ -100,3 +100,30 @@ test("a dead endpoint → a network TrueyyError", async () => {
   const dead = new Trueyy({ apiKey: ctx.apiKey, baseUrl: "http://127.0.0.1:9", timeout: 1500 });
   await assert.rejects(() => dead.interviews.list(), (e) => e instanceof Error);
 });
+
+// ── candidates (GDPR erasure) ──
+test("candidates.erase removes the candidate's data and returns a receipt", async () => {
+  const created = await makeInterview();
+  const detail = await trueyy.interviews.get(created.id);
+  const out = await trueyy.candidates.erase(detail.candidate.id);
+  assert.ok(out.receipt.id, "receipt id returned");
+  assert.ok(out.receipt.requested_at);
+});
+
+test("candidates.erase on an unknown candidate → TrueyyNotFoundError", async () => {
+  await assert.rejects(() => trueyy.candidates.erase(UUID), TrueyyNotFoundError);
+});
+
+// ── audit ──
+test("audit.list returns entries; audit.get fetches one", async () => {
+  await makeInterview(); // emits interview.create
+  const page = await trueyy.audit.list({ limit: 50 });
+  assert.ok(page.items.length >= 1 && typeof page.total === "number");
+  const row = page.items.find((r) => r.action === "interview.create") ?? page.items[0]!;
+  const one = await trueyy.audit.get(row.id);
+  assert.equal(one.id, row.id);
+});
+
+test("audit.get on an unknown id → TrueyyNotFoundError", async () => {
+  await assert.rejects(() => trueyy.audit.get(UUID), TrueyyNotFoundError);
+});
