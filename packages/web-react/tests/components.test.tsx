@@ -1,7 +1,7 @@
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import React from "react";
-import { render, getByText, cleanup, click, waitFor } from "./_support/render.js";
+import { render, getByText, queryByText, cleanup, click, waitFor } from "./_support/render.js";
 import {
   TrueyyProvider,
   useTrueyyClient,
@@ -69,16 +69,56 @@ test("the stream hooks start empty inside the provider", () => {
   assert.deepEqual(transcript, []);
 });
 
-test("TrueyyJoin renders the 3-step flow + shows downloads when no helper is running", async () => {
+test("TrueyyJoin gates on consent first — a candidate sees the consent screen, not the join steps", () => {
   render(
     <TrueyyProvider token={jwt({ aud: "candidate" })} baseUrl={BASE}>
       <TrueyyJoin meetingUrl="https://meet.google.com/abc-defg-hij" onReady={() => {}} />
     </TrueyyProvider>,
   );
+  // Consent (GDPR Art. 7) blocks the helper flow — the join steps must NOT
+  // render until consent is given.
+  assert.ok(getByText("Interview monitoring consent"));
+  assert.equal(queryByText("Join your interview"), null);
+  assert.equal(queryByText("Install the helper"), null);
+});
+
+test("TrueyyJoin with consentHandledExternally skips the consent UI and shows the 3-step flow", async () => {
+  render(
+    <TrueyyProvider token={jwt({ aud: "candidate" })} baseUrl={BASE}>
+      <TrueyyJoin meetingUrl="https://meet.google.com/abc-defg-hij" consentHandledExternally onReady={() => {}} />
+    </TrueyyProvider>,
+  );
+  // Host ATS owns consent → built-in consent UI hidden, join steps render.
   assert.ok(getByText("Join your interview"));
   assert.ok(getByText("Install the helper"));
+  assert.equal(queryByText("Interview monitoring consent"), null);
   // detectHelper() polls 127.0.0.1:48123 — nothing there → "Download for Mac"
   await waitFor(() => assert.ok(getByText("Download for Mac")), { timeout: 6000 });
+});
+
+test("TrueyyJoin renderConsent lets the host replace the built-in consent UI", () => {
+  render(
+    <TrueyyProvider token={jwt({ aud: "candidate" })} baseUrl={BASE}>
+      <TrueyyJoin
+        meetingUrl="https://meet.google.com/abc-defg-hij"
+        renderConsent={(c) => <div>custom consent status={c.status}</div>}
+        onReady={() => {}}
+      />
+    </TrueyyProvider>,
+  );
+  assert.ok(getByText(/custom consent/));
+  assert.equal(queryByText("Interview monitoring consent"), null);
+});
+
+test("TrueyyJoin does NOT gate an interviewer on consent", async () => {
+  render(
+    <TrueyyProvider token={jwt({ aud: "interviewer" })} baseUrl={BASE}>
+      <TrueyyJoin meetingUrl="https://meet.google.com/abc-defg-hij" onReady={() => {}} />
+    </TrueyyProvider>,
+  );
+  // Interviewer streams aren't consent-gated → straight to the join steps.
+  assert.ok(getByText("Join your interview"));
+  assert.equal(queryByText("Interview monitoring consent"), null);
 });
 
 test("TrueyyReplay fetches + renders the session detail", async () => {

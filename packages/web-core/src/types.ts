@@ -103,6 +103,14 @@ export interface ImageAnalysisResultEvent {
  * Map of socket event names → typed payloads. Used by TrueyyClient's typed
  * `.on(event, listener)` overloads.
  */
+/** Candidate consent lifecycle (GDPR) — broadcast by Cortex on every
+ *  grant/decline/revoke transition. */
+export interface ConsentStatusEvent {
+  sessionId: string;
+  status: "given" | "declined" | "revoked";
+  at: string;
+}
+
 export interface SocketEventMap {
   "risk-pulse": RiskPulseEvent;
   "window-result": WindowResultEvent;
@@ -110,6 +118,7 @@ export interface SocketEventMap {
   "stable-transcript": StableTranscriptEvent;
   "candidate-status": CandidateStatusEvent;
   "image-analysis-result": ImageAnalysisResultEvent;
+  "consent-status": ConsentStatusEvent;
 }
 
 export type SocketEventName = keyof SocketEventMap;

@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTrueyyClient } from "./TrueyyProvider.js";
 import { useRiskStream, useTranscriptStream, useWindowResults } from "./hooks.js";
-import type { RiskPulseEvent } from "@trueyy/web-core";
+import type { ConsentStatusEvent, RiskPulseEvent } from "@trueyy/web-core";
 
 export interface TrueyyMonitorProps {
   onRiskAlert?: (e: RiskPulseEvent) => void;
+  /** Fired on candidate consent transitions (given/declined/revoked). */
+  onConsentChange?: (e: ConsentStatusEvent) => void;
 }
 
 /**
@@ -14,19 +16,43 @@ export interface TrueyyMonitorProps {
  *   - Live transcript
  * Plus a "Capture now" button. Payload shapes mirror Cortex's socket events.
  */
-export function TrueyyMonitor({ onRiskAlert }: TrueyyMonitorProps) {
+export function TrueyyMonitor({ onRiskAlert, onConsentChange }: TrueyyMonitorProps) {
   const client = useTrueyyClient();
   const risks = useRiskStream();
   const windows = useWindowResults();
   const transcript = useTranscriptStream();
+  const [consent, setConsent] = useState<ConsentStatusEvent | null>(null);
 
   // Forward the newest pulse to the host app (effect, not during render).
   useEffect(() => {
     if (onRiskAlert && risks[0]) onRiskAlert(risks[0]);
   }, [risks, onRiskAlert]);
 
+  // Consent transitions — drive the banner + notify the host.
+  useEffect(() => {
+    return client.on("consent-status", (e) => {
+      setConsent(e);
+      onConsentChange?.(e);
+    });
+  }, [client, onConsentChange]);
+
   return (
     <div className="trueyy-monitor">
+      {consent?.status === "revoked" && (
+        <div className="trueyy-banner trueyy-banner--error" style={{ gridColumn: "1 / -1" }}>
+          Candidate withdrew monitoring consent at {new Date(consent.at).toLocaleTimeString()} — capture stopped.
+        </div>
+      )}
+      {consent?.status === "declined" && (
+        <div className="trueyy-banner trueyy-banner--warning" style={{ gridColumn: "1 / -1" }}>
+          Candidate declined monitoring consent — monitoring cannot start.
+        </div>
+      )}
+      {consent?.status === "given" && (
+        <div className="trueyy-banner trueyy-banner--ok" style={{ gridColumn: "1 / -1" }}>
+          Candidate consented to monitoring.
+        </div>
+      )}
       <div className="trueyy-card">
         <h3>Risk pulses</h3>
         <button className="trueyy-button" onClick={() => client.captureNow()}>

@@ -172,6 +172,7 @@ You can also override `--trueyy-bg`, `--trueyy-text`, `--trueyy-muted`, `--truey
 ```tsx
 <TrueyyMonitor
   onRiskAlert={(event) => void}            // fires on every risk-pulse
+  onConsentChange={(event) => void}        // fires on consent given/declined/revoked
 />
 ```
 
@@ -179,6 +180,10 @@ Renders three columns:
 1. **Risk pulses** — incoming alerts color-coded by severity.
 2. **Window analysis** — every 30 seconds, the LLM-synthesized risk + score + one-line summary.
 3. **Transcript** — Deepgram live transcript, two-speaker.
+
+A **consent banner** appears above the columns when the candidate withdraws
+(or declines) consent — capture has already stopped server-side at that point.
+`onConsentChange` also forwards every transition to your app.
 
 Plus a **"Capture now"** button that triggers an on-demand screenshot capture pipeline.
 
@@ -193,14 +198,51 @@ The component is intentionally simple. For a custom UI, drop the component and u
   meetingUrl={string}                      // REQUIRED — Zoom / Meet / Teams URL
   cortexUrl="https://api.trueyy.com"       // OPTIONAL
   onReady={() => void}                     // OPTIONAL — fires after meeting opens
+  renderConsent={(c) => ReactNode}         // OPTIONAL — replace the built-in consent UI
+  consentHandledExternally={boolean}       // OPTIONAL — you own the consent flow (see below)
+  onConsentChange={(status) => void}       // OPTIONAL — 'needed'|'given'|'declined'|'revoked'
 />
 ```
 
-3 steps:
+Consent first, then 3 steps:
 
+0. **Consent (GDPR Art. 7)** — before anything else, the candidate is shown the
+   monitoring consent text and must agree. Capture is **hard-gated server-side**:
+   Cortex refuses all candidate data for a session without an open consent row,
+   so this is a compliance requirement, not just UI.
 1. **Install the helper** — auto-detects presence; offers per-OS download if missing.
 2. **Connect helper** — POSTs the `helper_token` to `127.0.0.1:48123` so the daemon can talk to Cortex.
 3. **Open meeting** — opens `meetingUrl` in a new tab and tells the daemon the candidate is in.
+
+A **"Withdraw monitoring consent"** control is shown throughout the session
+(GDPR Art. 7(3)). Withdrawal notifies the interviewer immediately and stops
+capture; the candidate can re-consent to resume.
+
+### Candidate consent
+
+The default consent UI is compliance-safe out of the box — do nothing and your
+candidates get a valid, versioned, provable consent flow. Two escape hatches:
+
+- **`renderConsent`** — supply your own UI while keeping the logic. You receive
+  the `useConsent()` state (`status`, `text`, `agree`, `decline`, `revoke`, `busy`).
+- **`consentHandledExternally`** — your ATS collects consent itself and calls
+  `client.consent.grant(version)` directly. This only **hides** the built-in UI;
+  Cortex still blocks capture until consent is granted, so **you accept the
+  compliance responsibility** for showing informed consent before granting.
+
+For a fully custom flow, use the hook directly:
+
+```tsx
+import { useConsent } from "@trueyy/web";
+
+function MyConsent() {
+  const { status, text, agree, decline, revoke, busy } = useConsent();
+  // status: 'loading' | 'needed' | 'given' | 'declined' | 'revoked'
+}
+```
+
+Or the raw client methods (framework-agnostic, `@trueyy/web-core`):
+`client.consent.text()`, `.grant(version)`, `.decline()`, `.revoke()`.
 
 ---
 

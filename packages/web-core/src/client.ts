@@ -1,4 +1,5 @@
 import { WsClient } from "./wsClient.js";
+import { consentApi, type ConsentText } from "./consent.js";
 import type { SessionRole, SocketEventName, SocketEventMap } from "./types.js";
 
 export interface TrueyyClientOptions {
@@ -81,6 +82,28 @@ export class TrueyyClient {
       this.refreshTimer = null;
     }
     this.ws.disconnect();
+  }
+
+  /**
+   * Candidate consent (GDPR Art. 7). Candidate-role clients only — Cortex
+   * rejects other roles. Capture is server-gated on an open consent row,
+   * so a custom ATS UI MUST route the candidate through these before
+   * expecting any monitoring data.
+   */
+  consent = {
+    text: (): Promise<ConsentText> =>
+      consentApi.text(this.opts.baseUrl!, this.opts.token, this.requireSessionId()),
+    grant: (version: string) =>
+      consentApi.grant(this.opts.baseUrl!, this.opts.token, this.requireSessionId(), version),
+    decline: () =>
+      consentApi.decline(this.opts.baseUrl!, this.opts.token, this.requireSessionId()),
+    revoke: () =>
+      consentApi.revoke(this.opts.baseUrl!, this.opts.token, this.requireSessionId()),
+  };
+
+  private requireSessionId(): string {
+    if (!this.sessionId) throw new Error("TrueyyClient: token carries no session id (sub claim)");
+    return this.sessionId;
   }
 
   private scheduleRefresh(): void {
