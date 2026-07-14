@@ -1,4 +1,5 @@
 import { WsClient } from "./wsClient.js";
+import { consentApi, type ConsentText } from "./consent.js";
 import type { SessionRole, SocketEventName, SocketEventMap } from "./types.js";
 
 export interface TrueyyClientOptions {
@@ -26,14 +27,23 @@ export interface TrueyyClientOptions {
 export class TrueyyClient {
   private opts: TrueyyClientOptions;
   private ws: WsClient;
+  private sessionId: string | null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(opts: TrueyyClientOptions) {
     this.opts = { baseUrl: "https://api.trueyy.com", ...opts };
+    // The session id lives in the JWT `sub` claim. Cortex broadcasts every
+    // monitoring event to the room `session:{id}`, and a socket only joins
+    // that room by emitting `join-session` — so we must do it on each connect
+    // or <TrueyyMonitor> receives nothing.
+    this.sessionId = decodeJwtSub(opts.token);
     this.ws = new WsClient({
       baseUrl: this.opts.baseUrl!,
       token: opts.token,
       onReconnect: () => {},
+      onConnect: () => {
+        if (this.sessionId) this.ws.emit("join-session", this.sessionId);
+      },
     });
   }
 
@@ -74,6 +84,28 @@ export class TrueyyClient {
     this.ws.disconnect();
   }
 
+  /**
+   * Candidate consent (GDPR Art. 7). Candidate-role clients only — Cortex
+   * rejects other roles. Capture is server-gated on an open consent row,
+   * so a custom ATS UI MUST route the candidate through these before
+   * expecting any monitoring data.
+   */
+  consent = {
+    text: (): Promise<ConsentText> =>
+      consentApi.text(this.opts.baseUrl!, this.opts.token, this.requireSessionId()),
+    grant: (version: string) =>
+      consentApi.grant(this.opts.baseUrl!, this.opts.token, this.requireSessionId(), version),
+    decline: () =>
+      consentApi.decline(this.opts.baseUrl!, this.opts.token, this.requireSessionId()),
+    revoke: () =>
+      consentApi.revoke(this.opts.baseUrl!, this.opts.token, this.requireSessionId()),
+  };
+
+  private requireSessionId(): string {
+    if (!this.sessionId) throw new Error("TrueyyClient: token carries no session id (sub claim)");
+    return this.sessionId;
+  }
+
   private scheduleRefresh(): void {
     if (!this.opts.onTokenExpiring) return;
     const expMs = decodeJwtExpMs(this.opts.token);
@@ -108,4 +140,16 @@ function decodeJwtExpMs(token: string): number | null {
     /* ignore */
   }
   return null;
+}
+
+/** Read the session id from the JWT `sub` claim (no signature check). */
+function decodeJwtSub(token: string): string | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const payload = JSON.parse(atob(parts[1]!.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload?.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
 }

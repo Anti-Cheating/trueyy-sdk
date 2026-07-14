@@ -51,20 +51,24 @@ export function TrueyyProvider({
     return "interviewer";
   }, [role, token]);
 
-  useEffect(() => {
-    const client = new TrueyyClient({
+  // Lazily create the client during the first render so the context is
+  // available synchronously — children (e.g. <TrueyyMonitor>) call
+  // useTrueyyClient on mount, before any effect has run. Connect/disconnect
+  // lifecycle is handled by the effect below.
+  if (clientRef.current === null) {
+    clientRef.current = new TrueyyClient({
       token,
       role: resolvedRole,
       ...(baseUrl !== undefined ? { baseUrl } : {}),
       ...(onTokenExpiring ? { onTokenExpiring } : {}),
     });
+  }
+  const client = clientRef.current;
+
+  useEffect(() => {
     client.connect();
-    clientRef.current = client;
-    return () => {
-      client.disconnect();
-      clientRef.current = null;
-    };
-  }, [token, resolvedRole, baseUrl, onTokenExpiring]);
+    return () => client.disconnect();
+  }, [client]);
 
   const styleVars = useMemo<React.CSSProperties>(() => {
     const s: React.CSSProperties & Record<string, string> = {};
@@ -73,10 +77,10 @@ export function TrueyyProvider({
     return s;
   }, [theme?.primary, theme?.radius]);
 
-  const ctxValue = useMemo<Ctx | null>(() => {
-    if (!clientRef.current) return null;
-    return { client: clientRef.current, role: resolvedRole, theme: theme ?? {} };
-  }, [resolvedRole, theme]);
+  const ctxValue = useMemo<Ctx>(
+    () => ({ client, role: resolvedRole, theme: theme ?? {} }),
+    [client, resolvedRole, theme],
+  );
 
   return (
     <div className="trueyy-root" style={styleVars}>

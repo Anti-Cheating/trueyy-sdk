@@ -10,6 +10,7 @@ export {
   HELPER_DOWNLOAD_URL_WIN,
   type HelperStatus,
 } from "./helperBridge.js";
+export { consentApi, TrueyyConsentError, type ConsentText } from "./consent.js";
 export type {
   SessionRole,
   SessionStatus,
@@ -18,6 +19,7 @@ export type {
   LiveTranscriptEvent,
   CandidateStatusEvent,
   ImageAnalysisResultEvent,
+  ConsentStatusEvent,
   SocketEventName,
   SocketEventMap,
 } from "./types.js";

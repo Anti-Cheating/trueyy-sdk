@@ -2,11 +2,6 @@
 
 > The official Trueyy SDK. Embed AI-powered interview integrity monitoring into your ATS in under 50 lines of code.
 
-| Package | For | Install |
-|---|---|---|
-| [`@trueyy/node`](./packages/node) | Backend (Node 18+) | `npm i @trueyy/node` |
-| [`@trueyy/web`](./packages/web-react) | React frontend | `npm i @trueyy/web` |
-
 Trueyy detects cheating during remote technical interviews — AI assistants, suspicious applications, paste behavior, keystroke patterns, and screen content — and surfaces it as live risk pulses, 30-second window analyses, and a final report. This SDK is how your applicant tracking system plugs into the platform.
 
 ## What's in the box
@@ -29,15 +24,53 @@ import { Trueyy } from "@trueyy/node";
 
 const trueyy = new Trueyy({ apiKey: process.env.TRUEYY_API_KEY! });
 
-const session = await trueyy.sessions.create({
-  external_id: req.body.interview_id,
-  candidate: { email: "alice@x.com", first_name: "Alice", last_name: "X" },
-  interviewer: { email: "bob@you.com", first_name: "Bob", last_name: "Y" },
-  scheduled_start_at: req.body.start,
-  scheduled_end_at: req.body.end,
+// 1. make sure the interviewer exists (once — they accept via email, then
+//    appear in team.members with an id you reference as interviewer_user_id)
+await trueyy.team.invite({ email: "bob@you.com", role: "Member" });
+const { members } = await trueyy.team.members();
+const bob = members.find((m) => m.email === "bob@you.com")!;
+
+// 2. create the interview + round 1
+const { id, round_id } = await trueyy.interviews.create({
+  role: "Senior Backend",
+  candidate_email: "alice@x.com",
+  candidate_first_name: "Alice",
+  candidate_last_name: "X",
+  first_round: {
+    round_name: "Phone screen",
+    interviewer_user_id: bob.id,
+    scheduled_start_at: r1.start,
+    scheduled_end_at: r1.end,
+    timezone: "America/New_York",
+    meeting_link: r1.meeting_url,   // required (zoom / meet / teams)
+  },
 });
-// → returns { candidate_token, interviewer_token, helper_token, ... }
+
+// 3. mint a short-lived browser token to embed the candidate join flow
+const candidate = await trueyy.tokens.mint(round_id, "candidate");
 ```
+
+### Multi-round interviews
+
+A candidate often has several rounds — different interviewers, different days.
+Add each round to the same interview; each round references its own (pre-existing)
+interviewer:
+
+```ts
+await trueyy.interviews.addRound(id, {
+  round_name: "Technical — Round 2",
+  interviewer_user_id: carol.id,      // a different interviewer, already on the team
+  scheduled_start_at: r2.start,
+  scheduled_end_at: r2.end,
+  timezone: "America/New_York",
+  meeting_link: r2.meeting_url,
+});
+```
+
+The interview (`id`) groups its rounds; `trueyy.interviews.get(id)` returns each
+round with its own analysis summary. Per-round report: `trueyy.reports.get(round_id)`.
+Cancelling the interview (`trueyy.interviews.cancel(id)`) cancels every round that
+hasn't started yet.
 
 **Frontend (React):**
 
@@ -45,7 +78,8 @@ const session = await trueyy.sessions.create({
 import { TrueyyProvider, TrueyyMonitor } from "@trueyy/web";
 import "@trueyy/web/styles.css";
 
-<TrueyyProvider token={session.interviewer_token}>
+// `interviewerToken` comes from your backend — trueyy.tokens.mint(round_id, "interviewer")
+<TrueyyProvider token={interviewerToken}>
   <TrueyyMonitor onRiskAlert={(e) => analytics.track("risk", e)} />
 </TrueyyProvider>
 ```
@@ -72,6 +106,27 @@ app.post(
     res.sendStatus(200);
   }
 );
+```
+
+### Compliance — candidate erasure & audit
+
+Wire a candidate-data erasure into your own "delete applicant" flow. It's
+company-scoped — only your interviews' recordings, transcripts, and screenshots
+are removed; the candidate's data with other companies is untouched, and consent
+and audit records are retained:
+
+```ts
+const { candidate } = await trueyy.interviews.get(id);
+const { receipt } = await trueyy.candidates.erase(candidate.id);
+// store receipt.id / receipt.requested_at as proof of the erasure
+```
+
+Pull your account's audit trail (your own people and API keys — not Trueyy
+platform operations), e.g. to mirror into your SIEM:
+
+```ts
+const { items } = await trueyy.audit.list({ action: "interview.create", limit: 100 });
+const entry = await trueyy.audit.get(items[0].id);
 ```
 
 ## Architecture

@@ -14,14 +14,17 @@ export interface TrueyySessionDetail {
   session_id: string;
   title: string;
   status: string;
+  // Field names mirror Cortex's post-analysis report (speaker_role +
+  // detection shape), the same data Skyview's PostAnalysis panel renders.
   transcripts: Array<{
-    speaker: string;
+    speaker_role: "candidate" | "interviewer";
     text: string;
     captured_at: string;
   }>;
-  risk_pulses: Array<{
-    kind: string;
-    severity: string;
+  detections: Array<{
+    categoryLabel: string;
+    riskLevel: string;
+    apps: string[];
     occurred_at: string;
   }>;
   windows: Array<{
@@ -54,10 +57,10 @@ export function TrueyyReplay({ sessionId, fetchSessionDetail }: TrueyyReplayProp
 
       <div className="trueyy-card">
         <h3>Risk timeline</h3>
-        {detail.risk_pulses.map((p, i) => (
-          <div key={i} className={`trueyy-risk-pulse trueyy-risk-pulse--${p.severity}`}>
-            <span>{p.kind}</span>
-            <span>{new Date(p.occurred_at).toLocaleTimeString()}</span>
+        {detail.detections.map((d, i) => (
+          <div key={i} className={`trueyy-risk-pulse trueyy-risk-pulse--${d.riskLevel.toLowerCase()}`}>
+            <strong>{d.categoryLabel}</strong> — {d.apps.join(", ")}
+            <span>{new Date(d.occurred_at).toLocaleTimeString()}</span>
           </div>
         ))}
       </div>
@@ -67,7 +70,7 @@ export function TrueyyReplay({ sessionId, fetchSessionDetail }: TrueyyReplayProp
         <div style={{ maxHeight: 320, overflowY: "auto" }}>
           {detail.transcripts.map((t, i) => (
             <p key={i}>
-              <strong>{t.speaker}:</strong> {t.text}
+              <strong>{t.speaker_role}:</strong> {t.text}
             </p>
           ))}
         </div>

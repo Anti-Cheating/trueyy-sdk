@@ -44,7 +44,7 @@ const client = new TrueyyClient({
   baseUrl: "https://api.trueyy.com",        // optional override
   onTokenExpiring: async () => {
     // Fetch a fresh token from your ATS backend (which calls
-    // trueyy.sessions.refreshToken on the server). Return the new JWT.
+    // trueyy.tokens.mint(round_id, role) on the server). Return the new JWT.
     const res = await fetch("/our-ats/refresh-trueyy-token");
     return res.text();
   },
@@ -103,19 +103,21 @@ if (!ok) {
 }
 
 // Hand the Helper a helper-JWT + Cortex URL — it opens its own WSS
-// from there and starts streaming capture data.
+// from there and starts streaming capture data. The helper token is
+// minted on your backend via @trueyy/node:
+//   trueyy.tokens.mint(round_id, "helper") → { token, expires_at, role }
+// and `sessionId` is the round's id (round_id).
 await helperJoin({
-  helperToken: session.helper_token,        // from @trueyy/node sessions.create
+  helperToken,                              // from trueyy.tokens.mint(round_id, "helper")
   cortexUrl:   "https://api.trueyy.com",
-  sessionId:   session.session_id,
-  features:    { ai_apps: true, paste_detection: true },
+  sessionId:   roundId,                     // the round's id
 });
 
 // When the candidate clicks "Open Meeting" in your UI:
-await helperJoinedMeeting(session.session_id);
+await helperJoinedMeeting(roundId);
 
 // On unmount / explicit end:
-await helperLeave(session.session_id);
+await helperLeave(roundId);
 
 // Poll for live state (permissions, mic activity)
 const status = await helperStatus();

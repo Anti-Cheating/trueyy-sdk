@@ -12,11 +12,17 @@ export {
   type TrueyyReplayProps,
   type TrueyySessionDetail,
 } from "./TrueyyReplay.js";
-export { useRiskStream, useWindowResults, useTranscriptStream } from "./hooks.js";
+export {
+  useRiskStream, useWindowResults, useTranscriptStream,
+  useConsent, type ConsentStatus, type UseConsent,
+} from "./hooks.js";
 export type {
   SessionRole,
   RiskPulseEvent,
   WindowResultEvent,
   LiveTranscriptEvent,
   CandidateStatusEvent,
+  ImageAnalysisResultEvent,
+  ConsentStatusEvent,
+  ConsentText,
 } from "@trueyy/web-core";

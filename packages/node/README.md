@@ -1,14 +1,17 @@
 # @trueyy/node
 
-> Trueyy Server SDK for Node.js. Mint session tokens, query sessions, verify and process webhooks — from your ATS backend.
+> Trueyy Server SDK for Node.js. Create interviews + rounds, mint session tokens, query reports, verify and process webhooks — from your ATS backend.
 
 [![npm](https://img.shields.io/npm/v/@trueyy/node.svg)](https://www.npmjs.com/package/@trueyy/node)
 [![types](https://img.shields.io/npm/types/@trueyy/node.svg)](https://www.npmjs.com/package/@trueyy/node)
 
 This package is for your **backend**. It holds your `tk_live_*` master API key, talks to `https://api.trueyy.com/v1/*`, and exposes:
 
-- **Session orchestration** — create, fetch, list, end, cancel, refresh tokens.
-- **Reports** — pull the final risk report after the interview.
+- **Interviews** — create an interview + its first round, list, fetch, add more rounds, cancel.
+- **Team** — invite interviewers, list members.
+- **Billing** (read-only) — plans, current subscription, usage, invoices.
+- **Reports** — pull the per-round analysis report after the interview.
+- **Tokens** — mint short-lived browser JWTs for embedding the candidate/interviewer/helper UI.
 - **Webhook verification** — Express-compatible middleware that validates `X-Trueyy-Signature`, rejects replays, and parses the event.
 
 For your **frontend** (where the interviewer and candidate live), install [`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web) instead.
@@ -29,7 +32,9 @@ Requires **Node ≥ 18** (native `fetch`, `AbortController`, `crypto`). ESM and 
 
 ---
 
-## 30-second quick start
+## 60-second quick start
+
+The end-to-end flow: **invite the interviewer → create an interview (with its first round) → mint a browser token per round/role → embed the frontend → receive webhooks → pull the report.**
 
 ### 1. Configure
 
@@ -41,31 +46,60 @@ const trueyy = new Trueyy({
 });
 ```
 
-### 2. Schedule an interview
+### 2. Invite the interviewer
+
+The interviewer must exist in your team before you can reference them on a round. Invite them, then look up their id in `members()`.
 
 ```ts
-const session = await trueyy.sessions.create({
-  external_id: "acme-interview-42",            // YOUR ID — keep this for idempotency
-  candidate:   { email: "alice@x.com",  first_name: "Alice", last_name: "Doe" },
-  interviewer: { email: "bob@you.com",  first_name: "Bob",   last_name: "Smith" },
-  scheduled_start_at: "2026-06-04T10:00:00Z",
-  scheduled_end_at:   "2026-06-04T11:00:00Z",
-  meeting_url: "https://zoom.us/j/123456789",
-});
+await trueyy.team.invite({ email: "bob@you.com", role: "Member" });
 
-// → { session_id, candidate_token, interviewer_token, helper_token, ... }
+// After they accept, find their id:
+const { members } = await trueyy.team.members();
+const interviewer = members.find((m) => m.email === "bob@you.com")!;
 ```
 
-### 3. Hand the tokens off to your frontend
+### 3. Create an interview + its first round
 
-Persist `session.session_id` in your DB keyed by your `external_id`, then return the right JWT to the right browser tab:
+```ts
+const { id, round_id } = await trueyy.interviews.create({
+  role: "Senior Backend Engineer",
+  candidate_email: "alice@x.com",
+  candidate_first_name: "Alice",
+  candidate_last_name: "Doe",
+  first_round: {
+    round_name: "Technical Screen",
+    interviewer_user_id: interviewer.id,           // from team.members()
+    scheduled_start_at: "2026-06-04T10:00:00Z",    // ISO 8601
+    scheduled_end_at:   "2026-06-04T11:00:00Z",    // ISO 8601
+    timezone: "UTC",
+    meeting_link: "https://zoom.us/j/123456789",   // required
+  },
+});
 
-- `candidate_token` → the candidate's pre-join page
-- `interviewer_token` → the interviewer's monitoring page
+// → { id: "<interview id>", round_id: "<first round id>" }
+```
 
-The frontend uses these with [`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web)'s `<TrueyyProvider>`.
+Persist `id` and `round_id` in your DB. The `round_id` is the handle for tokens and reports.
 
-### 4. Receive webhook events
+### 4. Mint browser tokens
+
+Mint a short-lived JWT per round + role and hand each to the right browser tab.
+
+```ts
+const candidate    = await trueyy.tokens.mint(round_id, "candidate");
+const interviewerT = await trueyy.tokens.mint(round_id, "interviewer");
+const helper       = await trueyy.tokens.mint(round_id, "helper");
+
+// each → { token, expires_at, role }
+```
+
+- `candidate.token` → the candidate's pre-join page
+- `interviewerT.token` → the interviewer's monitoring page
+- `helper.token` → handed to the local Helper daemon via `@trueyy/web-core`'s `helperJoin`
+
+The frontend uses these with [`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web).
+
+### 5. Receive webhook events
 
 ```ts
 import express from "express";
@@ -80,6 +114,12 @@ app.post(
     res.sendStatus(200);
   }
 );
+```
+
+### 6. Pull the report
+
+```ts
+const report = await trueyy.reports.get(round_id);
 ```
 
 That's the whole integration.
@@ -97,96 +137,153 @@ new Trueyy({
 });
 ```
 
-Override `baseUrl` only for self-hosted V2 deployments. Override `fetchImpl` to inject a polyfill or instrumentation (e.g. `undici`, OpenTelemetry-wrapped fetch).
+Override `baseUrl` only for self-hosted deployments. Override `fetchImpl` to inject a polyfill or instrumentation (e.g. `undici`, OpenTelemetry-wrapped fetch).
 
 ---
 
-## Sessions API
+## Interviews API
 
-### `trueyy.sessions.create(input)`
+An **interview** is the parent process; it owns one or more ordered **rounds** (different interviewers / days). This is the same model the Trueyy dashboard uses.
 
-Schedules an interview. **Idempotent** on `(your_tenant, external_id)` — POSTing the same `external_id` twice returns the **same** session instead of creating a duplicate.
+### `trueyy.interviews.create(input)`
+
+Creates an interview and its first round in one call.
 
 ```ts
-const session: CreatedSession = await trueyy.sessions.create({
-  external_id: "acme-int-42",
-  candidate:   { email, first_name, last_name },
-  interviewer: { email, first_name, last_name },
-  scheduled_start_at: ISO_DATE,
-  scheduled_end_at:   ISO_DATE,
-  meeting_url?: string,
-  title?: string,
-  description?: string,
-  timezone?: string,                // default: "UTC"
-  features?: { ai_apps?: boolean, paste_detection?: boolean, ... },
+const { id, round_id } = await trueyy.interviews.create({
+  role: string,
+  description?: string | null,
+  candidate_email: string,
+  candidate_first_name: string,
+  candidate_last_name: string,
+  first_round: {
+    round_name: string,
+    interviewer_user_id: string,    // must pre-exist (team.invite → team.members)
+    scheduled_start_at: string,     // ISO 8601
+    scheduled_end_at: string,       // ISO 8601
+    timezone: string,
+    meeting_link: string,           // required (zoom / meet / teams)
+  },
 });
+// → { id: string, round_id: string }
 ```
 
-Returns:
+### `trueyy.interviews.list(query?)`
 
 ```ts
-{
-  session_id: "ses_…",
-  external_id: "acme-int-42",
-  candidate_token:    "<5-min JWT>",
-  interviewer_token:  "<5-min JWT>",
-  helper_token:       "<session-long JWT, capped at scheduled_end_at + 2h>",
-  candidate_token_expires_at:   "2026-06-04T10:05:00Z",
-  interviewer_token_expires_at: "2026-06-04T10:05:00Z",
-  helper_token_expires_at:      "2026-06-04T13:00:00Z",
-  status: "SCHEDULED",
-  scheduled_start_at, scheduled_end_at,
-  created: true,    // false if this was an idempotent replay
-}
-```
-
-### `trueyy.sessions.get(id)`
-
-```ts
-const session: Session = await trueyy.sessions.get(sessionId);
-```
-
-### `trueyy.sessions.list(filter)`
-
-Paginated list. Cursor-based.
-
-```ts
-const { sessions, next_cursor } = await trueyy.sessions.list({
-  limit: 50,                       // 1..100, default 20
-  cursor: prevCursor,              // optional, for next page
-  status: "ACTIVE",                // optional filter
+const page = await trueyy.interviews.list({
+  limit?: number,
+  offset?: number,
+  search?: string,
 });
+// → { items: Interview[], total: number }
 ```
 
-### `trueyy.sessions.end(id)`
+### `trueyy.interviews.get(id)`
 
-Force-end an ACTIVE session. Idempotent — returns 404 if already ENDED/CANCELLED.
-
-### `trueyy.sessions.cancel(id, reason?)`
-
-Cancel a SCHEDULED session. Reason is optional, stored in description.
-
-### `trueyy.sessions.refreshToken(id, role)`
-
-Mint a fresh 5-min JWT before the current one expires. Your backend calls this when the browser approaches expiry and pushes the new token down via your own channel (existing socket, etc.).
+Returns the interview with its `rounds[]`.
 
 ```ts
-const { token, expires_at, role } = await trueyy.sessions.refreshToken(
-  sessionId,
-  "candidate" | "interviewer" | "helper"
-);
+const interview = await trueyy.interviews.get(id);
+// interview.rounds → RoundSummary[] (each has id, round_name, round_order,
+//   status, interviewer, analysis)
+```
+
+### `trueyy.interviews.addRound(id, round)`
+
+Add another round (different interviewer / day) to an existing interview. The returned `round_id` is what you pass to `tokens.mint` and `reports.get`.
+
+```ts
+const { round_id, round_order } = await trueyy.interviews.addRound(id, {
+  round_name: "System Design",
+  interviewer_user_id: anotherInterviewer.id,
+  scheduled_start_at: "2026-06-06T10:00:00Z",
+  scheduled_end_at:   "2026-06-06T11:00:00Z",
+  timezone: "UTC",
+  meeting_link: "https://zoom.us/j/987654321",
+});
+// → { round_id: string, round_order: number }
+```
+
+### `trueyy.interviews.cancel(id)`
+
+Cancel an interview.
+
+```ts
+await trueyy.interviews.cancel(id);
+```
+
+---
+
+## Team API
+
+### `trueyy.team.invite({ email, role })`
+
+Invite a teammate (e.g. an interviewer). They accept via email, then appear in `members()` with an id you reference as `interviewer_user_id`.
+
+```ts
+await trueyy.team.invite({ email: "bob@you.com", role: "Member" });
+// role: "Admin" | "Member"
+// → { id, email, role }
+```
+
+### `trueyy.team.members()`
+
+```ts
+const { members } = await trueyy.team.members();
+// members → Member[] (id, email, first_name, last_name, role)
+```
+
+### `trueyy.team.invites(query?)`
+
+List pending invites.
+
+```ts
+await trueyy.team.invites({ limit?: number, offset?: number });
+```
+
+---
+
+## Billing API (read-only)
+
+Billing is **read-only**. Plan upgrade / subscribe / cancel are intentionally **not** in the SDK — those happen in the Trueyy dashboard.
+
+```ts
+await trueyy.billing.plans();         // available plans
+await trueyy.billing.subscription();  // current subscription
+await trueyy.billing.invoices();      // invoice history
+await trueyy.billing.usage();         // usage this period
 ```
 
 ---
 
 ## Reports API
 
+### `trueyy.reports.get(roundId)`
+
+`roundId` is the round's session id — from `interviews.create` → `round_id`, `interviews.addRound` → `round_id`, or an interview's `rounds[].id`.
+
 ```ts
-const report = await trueyy.reports.get(sessionId);
-// → { session_id, report_url, expires_at }
+const report = await trueyy.reports.get(round_id);
+// → Report (the round's analysis)
 ```
 
-`report_url` is a short-lived signed URL for the PDF + JSON. Re-fetch when expired.
+---
+
+## Tokens API
+
+### `trueyy.tokens.mint(roundId, role)`
+
+Mint a short-lived browser JWT for a round so you can embed `<TrueyyJoin>` / `<TrueyyMonitor>` in your own UI without a Trueyy login.
+
+```ts
+const { token, expires_at, role } = await trueyy.tokens.mint(
+  round_id,
+  "candidate"    // "candidate" | "interviewer" | "helper"
+);
+```
+
+Mint a fresh token whenever the previous one nears expiry; the browser-side client (`@trueyy/web-core`) calls back to your backend to fetch one via this method.
 
 ---
 
@@ -194,7 +291,7 @@ const report = await trueyy.reports.get(sessionId);
 
 ### `trueyy.webhooks.verify(secret)`
 
-Returns Express-compatible middleware. Validates `X-Trueyy-Signature` (HMAC-SHA256), rejects replays (timestamp > 5 min old), parses the body, and attaches `req.trueyy.event`.
+Returns Express-compatible middleware. Validates `X-Trueyy-Signature` (HMAC-SHA256 over `t.rawBody`), rejects replays (timestamp > 5 min old), parses the body, and attaches `req.trueyy.event`. Mount it **after** `express.raw()` so the raw bytes are available for HMAC.
 
 ```ts
 import express from "express";
@@ -227,18 +324,22 @@ app.post(
 );
 ```
 
+The middleware responds `401` on missing/invalid signature or missing `x-trueyy-event-id` / `x-trueyy-event-type` headers, and `400` if the raw body is unavailable or not JSON.
+
 ### Event catalog
+
+Every event shares the envelope `{ event_id, event_type, created_at, api_version, data }`.
 
 | `event_type` | Fires when | Sample `data` shape |
 |---|---|---|
-| `session.ready` | Candidate clicked "Open Meeting" + helper online | `{ session_id, external_id, candidate, joined_at }` |
-| `session.transcript_segment` | Deepgram returns a final fragment | `{ session_id, speaker, text, started_at, ended_at }` |
-| `session.risk_pulse` | Layer 1 alert (AI tool detected, paste threshold) | `{ session_id, kind, severity, evidence }` |
-| `session.window_result` | 30-second analysis window completes | `{ session_id, window_id, risk, score, summary, modality_breakdown }` |
+| `session.ready` | Candidate + helper online and ready | `{ session_id, ... }` |
+| `session.transcript_segment` | A final transcript fragment is produced | `{ session_id, speaker, text, started_at, ended_at }` |
+| `session.risk_pulse` | A risk alert fires (AI tool detected, paste threshold) | `{ session_id, kind, severity, evidence }` |
+| `session.window_result` | A 30-second analysis window completes | `{ session_id, window_id, risk, score, summary, modality_breakdown }` |
 | `session.image_analysis_result` | Vision LLM completes screenshot analysis | `{ session_id, image_id, risk, findings }` |
-| `session.ended` | Session moves to ENDED (any path) | `{ session_id, external_id, started_at, ended_at, final_score }` |
-| `session.report_ready` | Final PDF + JSON report generated | `{ session_id, report_url, expires_at }` |
-| `session.cancelled` | Cancelled before start | `{ session_id, reason }` |
+| `session.ended` | A round moves to ENDED (any path) | `{ session_id, ... }` |
+| `session.report_ready` | The round's analysis report is generated | `{ session_id, ... }` |
+| `session.cancelled` | Cancelled before start | `{ session_id, ... }` |
 
 ### Delivery guarantees
 
@@ -265,9 +366,10 @@ import {
 } from "@trueyy/node";
 
 try {
-  await trueyy.sessions.create(input);
+  await trueyy.interviews.create(input);
 } catch (err) {
-  if (err instanceof TrueyyAuthError)     { /* 401 — rotate token */ }
+  if (err instanceof TrueyyAuthError)       { /* 401 — rotate token */ }
+  if (err instanceof TrueyyNotFoundError)   { /* 404 — missing resource */ }
   if (err instanceof TrueyyValidationError) { /* 400 — fix input */ }
   if (err instanceof TrueyyRateLimitError)  { /* 429 — back off */ }
   if (err instanceof TrueyyServerError)     { /* 5xx — retry later */ }
@@ -283,7 +385,7 @@ err.body        // parsed response body if any
 err.message     // human-readable
 ```
 
-**Retry policy at the transport layer:** idempotent GETs are retried once on network failure. POSTs are **never** auto-retried — supply your own `external_id` for create-style operations and Trueyy's server-side idempotency will catch duplicates.
+**Retry policy at the transport layer:** idempotent GETs are retried once on network failure. POSTs are **never** auto-retried.
 
 ---
 
@@ -294,37 +396,23 @@ Full types ship with the package (`./dist/index.d.ts`). Useful exports:
 ```ts
 import type {
   // Request shapes
-  CreateSessionInput,
+  CreateInterviewInput,
+  RoundInput,
   Person,
   // Response shapes
-  CreatedSession,
-  Session,
+  Interview,
+  RoundSummary,
+  Member,
   Report,
-  Paginated,
-  // Session metadata
+  RefreshedToken,
+  Page,
+  // Metadata
   SessionStatus,        // "SCHEDULED" | "ACTIVE" | "ENDED" | "CANCELLED"
   SessionRole,          // "candidate" | "interviewer" | "helper"
   // Webhook
   WebhookEvent,
   WebhookEventType,
 } from "@trueyy/node";
-```
-
----
-
-## Examples
-
-A full Express integration lives in this monorepo:
-
-- [`examples/express-ats`](../../examples/express-ats/server.ts) — schedule endpoint + webhook receiver.
-
-Clone and run:
-
-```bash
-git clone https://github.com/Anti-Cheating/trueyy-sdk.git
-cd trueyy-sdk
-pnpm install
-TRUEYY_API_KEY=tk_test_… pnpm -F express-ats dev
 ```
 
 ---

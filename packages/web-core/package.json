@@ -12,7 +12,14 @@
     "url": "git+https://github.com/Anti-Cheating/trueyy-sdk.git",
     "directory": "packages/web-core"
   },
-  "keywords": ["trueyy", "sdk", "interview", "ats", "websocket", "browser"],
+  "keywords": [
+    "trueyy",
+    "sdk",
+    "interview",
+    "ats",
+    "websocket",
+    "browser"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -23,10 +30,15 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test --test-concurrency=1 --test-force-exit tests/*.test.ts",
+    "test:cov": "tsx --test --test-concurrency=1 --test-force-exit --experimental-test-coverage --test-coverage-include=src/** --test-coverage-exclude=src/types.ts tests/*.test.ts"
   },
   "dependencies": {
     "socket.io-client": "^4.8.0"

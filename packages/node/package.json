@@ -1,6 +1,6 @@
 {
   "name": "@trueyy/node",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Trueyy Server SDK for Node.js — mint session tokens, query sessions, handle webhooks.",
   "license": "MIT",
   "homepage": "https://github.com/Anti-Cheating/trueyy-sdk/tree/main/packages/node#readme",
@@ -12,7 +12,15 @@
     "url": "git+https://github.com/Anti-Cheating/trueyy-sdk.git",
     "directory": "packages/node"
   },
-  "keywords": ["trueyy", "sdk", "interview", "ats", "anti-cheating", "monitoring", "webhooks"],
+  "keywords": [
+    "trueyy",
+    "sdk",
+    "interview",
+    "ats",
+    "anti-cheating",
+    "monitoring",
+    "webhooks"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -24,10 +32,15 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test --test-concurrency=1 --test-force-exit tests/*.test.ts",
+    "test:cov": "tsx --test --test-concurrency=1 --test-force-exit --experimental-test-coverage --test-coverage-include=src/** --test-coverage-exclude=src/types.ts tests/*.test.ts"
   },
   "engines": {
     "node": ">=18"
