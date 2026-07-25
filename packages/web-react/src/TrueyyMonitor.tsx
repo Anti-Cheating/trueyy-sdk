@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTrueyyClient } from "./TrueyyProvider.js";
 import { useRiskStream, useTranscriptStream, useWindowResults } from "./hooks.js";
-import type { ConsentStatusEvent, RiskPulseEvent } from "@trueyy/web-core";
+import type { ConsentStatusEvent, RiskPulseEvent } from "@trueyy-sdk/web-core";
 
 export interface TrueyyMonitorProps {
   onRiskAlert?: (e: RiskPulseEvent) => void;

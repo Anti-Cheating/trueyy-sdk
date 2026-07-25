@@ -8,19 +8,19 @@ Trueyy detects cheating during remote technical interviews — AI assistants, su
 
 | Package | For | Install |
 |---|---|---|
-| [`@trueyy/node`](./packages/node) | Your backend (Node 18+) | `npm i @trueyy/node` |
-| [`@trueyy/web`](./packages/web-react) | Your React frontend | `npm i @trueyy/web` |
+| [`@trueyy-sdk/node`](./packages/node) | Your backend (Node 18+) | `npm i @trueyy-sdk/node` |
+| [`@trueyy-sdk/web`](./packages/web-react) | Your React frontend | `npm i @trueyy-sdk/web` |
 
 The backend mints session tokens and verifies webhook deliveries. The frontend embeds `<TrueyyMonitor>` for live interviewer view, `<TrueyyJoin>` for the candidate pre-join flow, and `<TrueyyReplay>` for post-hoc review.
 
-`@trueyy/web-core` is a framework-agnostic browser core (WebSocket client, helper bridge, types) consumed transitively by `@trueyy/web`. Future Vue / Angular / Svelte adapters will share the same core.
+`@trueyy-sdk/web-core` is a framework-agnostic browser core (WebSocket client, helper bridge, types) consumed transitively by `@trueyy-sdk/web`. Future Vue / Angular / Svelte adapters will share the same core.
 
 ## Quick start
 
 **Backend:**
 
 ```ts
-import { Trueyy } from "@trueyy/node";
+import { Trueyy } from "@trueyy-sdk/node";
 
 const trueyy = new Trueyy({ apiKey: process.env.TRUEYY_API_KEY! });
 
@@ -75,8 +75,8 @@ hasn't started yet.
 **Frontend (React):**
 
 ```tsx
-import { TrueyyProvider, TrueyyMonitor } from "@trueyy/web";
-import "@trueyy/web/styles.css";
+import { TrueyyProvider, TrueyyMonitor } from "@trueyy-sdk/web";
+import "@trueyy-sdk/web/styles.css";
 
 // `interviewerToken` comes from your backend — trueyy.tokens.mint(round_id, "interviewer")
 <TrueyyProvider token={interviewerToken}>
@@ -148,7 +148,7 @@ This is a [pnpm workspaces](https://pnpm.io/workspaces) monorepo.
 ```bash
 pnpm install
 pnpm build       # builds all packages
-pnpm -F @trueyy/node build       # build a single package
+pnpm -F @trueyy-sdk/node build       # build a single package
 pnpm -F express-ats dev          # run the express example
 pnpm -F react-ats dev            # run the React example
 ```
@@ -168,7 +168,7 @@ pnpm -F react-ats dev            # run the React example
 
 ## Status
 
-V1 — production-ready API surface, frozen. `@trueyy/web-vue` and `@trueyy/web-svelte` planned.
+V1 — production-ready API surface, frozen. `@trueyy-sdk/web-vue` and `@trueyy-sdk/web-svelte` planned.
 
 ## License
 

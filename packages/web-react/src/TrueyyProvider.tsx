@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
-import { TrueyyClient, type SessionRole } from "@trueyy/web-core";
+import { TrueyyClient, type SessionRole } from "@trueyy-sdk/web-core";
 
 export interface TrueyyTheme {
   primary?: string;

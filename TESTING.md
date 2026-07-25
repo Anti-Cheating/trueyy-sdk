@@ -1,8 +1,8 @@
 # Testing the Trueyy SDK
 
-The SDK test suites are **end-to-end with no mocks**. `@trueyy/node` and
-`@trueyy/web-core` run against a **real Cortex backend** that the harness boots
-for you; `@trueyy/web` renders the React components in a real DOM (jsdom).
+The SDK test suites are **end-to-end with no mocks**. `@trueyy-sdk/node` and
+`@trueyy-sdk/web-core` run against a **real Cortex backend** that the harness boots
+for you; `@trueyy-sdk/web` renders the React components in a real DOM (jsdom).
 
 ## Prerequisites
 
@@ -46,18 +46,18 @@ down a stack that was already running).
 
 ```bash
 # requires cortex_test prepared once: (cd ../Cortex && npm run test:e2e:setup)
-pnpm -F @trueyy/node      test:cov   # spawns a real Cortex on :4567
-pnpm -F @trueyy/web-core  test:cov   # spawns a real Cortex on :4568
-pnpm -F @trueyy/web       test:cov   # jsdom only, no backend
+pnpm -F @trueyy-sdk/node      test:cov   # spawns a real Cortex on :4567
+pnpm -F @trueyy-sdk/web-core  test:cov   # spawns a real Cortex on :4568
+pnpm -F @trueyy-sdk/web       test:cov   # jsdom only, no backend
 ```
 
 ## What hits the backend
 
 | Package | Calls a real Cortex? |
 |---|---|
-| `@trueyy/node` | **Yes** — every resource over real HTTP to the spawned server (webhook `verify()` uses a real local HTTP receiver + genuine HMAC). |
-| `@trueyy/web-core` | **Partly** — `WsClient`/`TrueyyClient` use the real Cortex Socket.io; `helperBridge` uses a real local HTTP server standing in for the desktop Helper daemon. |
-| `@trueyy/web` | **No** — pure DOM rendering; `<TrueyyReplay>` uses the consumer's `fetchSessionDetail` callback. |
+| `@trueyy-sdk/node` | **Yes** — every resource over real HTTP to the spawned server (webhook `verify()` uses a real local HTTP receiver + genuine HMAC). |
+| `@trueyy-sdk/web-core` | **Partly** — `WsClient`/`TrueyyClient` use the real Cortex Socket.io; `helperBridge` uses a real local HTTP server standing in for the desktop Helper daemon. |
+| `@trueyy-sdk/web` | **No** — pure DOM rendering; `<TrueyyReplay>` uses the consumer's `fetchSessionDetail` callback. |
 
 ## Env knobs
 

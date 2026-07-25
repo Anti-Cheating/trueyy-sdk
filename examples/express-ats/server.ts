@@ -1,8 +1,8 @@
 import express from "express";
-import { Trueyy, type SessionRole } from "@trueyy/node";
+import { Trueyy, type SessionRole } from "@trueyy-sdk/node";
 
 /**
- * Reference ATS backend — exercises EVERY @trueyy/node API surface:
+ * Reference ATS backend — exercises EVERY @trueyy-sdk/node API surface:
  *   interviews (create / list / get / addRound / cancel)
  *   tokens     (mint — candidate / interviewer / helper)
  *   reports    (get)

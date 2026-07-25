@@ -5,8 +5,8 @@ import type {
   LiveTranscriptEvent,
   RiskPulseEvent,
   WindowResultEvent,
-} from "@trueyy/web-core";
-import { TrueyyConsentError } from "@trueyy/web-core";
+} from "@trueyy-sdk/web-core";
+import { TrueyyConsentError } from "@trueyy-sdk/web-core";
 import { useTrueyyClient } from "./TrueyyProvider.js";
 
 export function useRiskStream(max = 50): RiskPulseEvent[] {

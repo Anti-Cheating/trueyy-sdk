@@ -5,7 +5,7 @@ import {
   helperJoinedMeeting,
   HELPER_DOWNLOAD_URL_MAC,
   HELPER_DOWNLOAD_URL_WIN,
-} from "@trueyy/web-core";
+} from "@trueyy-sdk/web-core";
 import { useTrueyyContext } from "./TrueyyProvider.js";
 import { useConsent, type ConsentStatus, type UseConsent } from "./hooks.js";
 

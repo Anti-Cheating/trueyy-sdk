@@ -1,5 +1,5 @@
 {
-  "name": "@trueyy/web-core",
+  "name": "@trueyy-sdk/web-core",
   "version": "1.0.0",
   "description": "Framework-agnostic primitives for Trueyy in the browser.",
   "license": "MIT",

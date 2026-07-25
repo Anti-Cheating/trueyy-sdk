@@ -9,7 +9,7 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@trueyy/node": "workspace:*",
+    "@trueyy-sdk/node": "workspace:*",
     "express": "^4.19.0"
   },
   "devDependencies": {

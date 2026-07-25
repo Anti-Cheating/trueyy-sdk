@@ -1,13 +1,13 @@
-# @trueyy/web-core
+# @trueyy-sdk/web-core
 
 > Framework-agnostic browser primitives that power Trueyy's web SDKs.
 
-[![npm](https://img.shields.io/npm/v/@trueyy/web-core.svg)](https://www.npmjs.com/package/@trueyy/web-core)
-[![types](https://img.shields.io/npm/types/@trueyy/web-core.svg)](https://www.npmjs.com/package/@trueyy/web-core)
+[![npm](https://img.shields.io/npm/v/@trueyy-sdk/web-core.svg)](https://www.npmjs.com/package/@trueyy-sdk/web-core)
+[![types](https://img.shields.io/npm/types/@trueyy-sdk/web-core.svg)](https://www.npmjs.com/package/@trueyy-sdk/web-core)
 
-> **Most consumers should NOT install this directly.** If you use React, install [`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web) — it bundles this core and adds React components.
+> **Most consumers should NOT install this directly.** If you use React, install [`@trueyy-sdk/web`](https://www.npmjs.com/package/@trueyy-sdk/web) — it bundles this core and adds React components.
 
-This package is the foundation: a stateful WebSocket client, the local Helper bridge over `127.0.0.1:48123`, and TypeScript types — all with **zero UI dependencies**. It exists so Trueyy's framework adapters (`@trueyy/web` for React, future `@trueyy/web-vue`, `@trueyy/web-svelte`, etc.) can share the same browser-side runtime without duplicating logic.
+This package is the foundation: a stateful WebSocket client, the local Helper bridge over `127.0.0.1:48123`, and TypeScript types — all with **zero UI dependencies**. It exists so Trueyy's framework adapters (`@trueyy-sdk/web` for React, future `@trueyy-sdk/web-vue`, `@trueyy-sdk/web-svelte`, etc.) can share the same browser-side runtime without duplicating logic.
 
 ## When you'd install this directly
 
@@ -15,14 +15,14 @@ This package is the foundation: a stateful WebSocket client, the local Helper br
 - You're building a **custom UI** and only need Trueyy's data plane (transcript, risk pulses, window analysis).
 - You want to **embed Trueyy inside a Web Component** or a non-React micro-frontend.
 
-If none of those apply, use [`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web) — it gives you `<TrueyyMonitor>`, `<TrueyyJoin>`, and `<TrueyyReplay>` out of the box.
+If none of those apply, use [`@trueyy-sdk/web`](https://www.npmjs.com/package/@trueyy-sdk/web) — it gives you `<TrueyyMonitor>`, `<TrueyyJoin>`, and `<TrueyyReplay>` out of the box.
 
 ---
 
 ## Install
 
 ```bash
-npm install @trueyy/web-core
+npm install @trueyy-sdk/web-core
 ```
 
 Runs in any modern browser. Requires `fetch`, `WebSocket`, `crypto.subtle`. No Node/build polyfills.
@@ -36,10 +36,10 @@ Runs in any modern browser. Requires `fetch`, `WebSocket`, `crypto.subtle`. No N
 Holds a session-scoped JWT, connects to Cortex via WebSocket, auto-refreshes the token before expiry, and exposes a typed event subscription API.
 
 ```ts
-import { TrueyyClient } from "@trueyy/web-core";
+import { TrueyyClient } from "@trueyy-sdk/web-core";
 
 const client = new TrueyyClient({
-  token: interviewerToken,                  // JWT minted by @trueyy/node
+  token: interviewerToken,                  // JWT minted by @trueyy-sdk/node
   role: "interviewer",                      // "candidate" | "interviewer" | "helper"
   baseUrl: "https://api.trueyy.com",        // optional override
   onTokenExpiring: async () => {
@@ -92,7 +92,7 @@ import {
   helperStatus,
   HELPER_DOWNLOAD_URL_MAC,
   HELPER_DOWNLOAD_URL_WIN,
-} from "@trueyy/web-core";
+} from "@trueyy-sdk/web-core";
 
 // Is the daemon installed and running?
 const ok = await detectHelper();
@@ -104,7 +104,7 @@ if (!ok) {
 
 // Hand the Helper a helper-JWT + Cortex URL — it opens its own WSS
 // from there and starts streaming capture data. The helper token is
-// minted on your backend via @trueyy/node:
+// minted on your backend via @trueyy-sdk/node:
 //   trueyy.tokens.mint(round_id, "helper") → { token, expires_at, role }
 // and `sessionId` is the round's id (round_id).
 await helperJoin({
@@ -156,7 +156,7 @@ import type {
   ImageAnalysisResultEvent,
   SocketEventName,
   SocketEventMap,
-} from "@trueyy/web-core";
+} from "@trueyy-sdk/web-core";
 ```
 
 `client.on(event, fn)` infers `e` from `SocketEventMap` — no manual casting required:
@@ -178,7 +178,7 @@ Render risk events into a plain `<div>` with no framework:
 <div id="risk-list"></div>
 
 <script type="module">
-  import { TrueyyClient } from "https://esm.sh/@trueyy/web-core";
+  import { TrueyyClient } from "https://esm.sh/@trueyy-sdk/web-core";
 
   const list = document.getElementById("risk-list");
   const client = new TrueyyClient({
@@ -204,7 +204,7 @@ If you'd like a Vue, Svelte, Angular, or Solid adapter, the pattern is:
 
 1. Wrap `TrueyyClient` in your framework's context primitive (Vue `provide/inject`, Svelte stores, Solid signals).
 2. Expose hooks/composables/runes that subscribe to specific events.
-3. Re-export the relevant types from `@trueyy/web-core`.
+3. Re-export the relevant types from `@trueyy-sdk/web-core`.
 
 See [`packages/web-react`](../web-react/src/) in this monorepo for a reference implementation in ~300 lines.
 
@@ -217,21 +217,21 @@ PRs welcome for additional adapters.
 Full type defs at `./dist/index.d.ts`. Cherry-pick imports:
 
 ```ts
-import { TrueyyClient, type TrueyyClientOptions } from "@trueyy/web-core";
-import { detectHelper, type HelperStatus } from "@trueyy/web-core";
+import { TrueyyClient, type TrueyyClientOptions } from "@trueyy-sdk/web-core";
+import { detectHelper, type HelperStatus } from "@trueyy-sdk/web-core";
 import type {
   SessionRole, SessionStatus,
   RiskPulseEvent, WindowResultEvent, LiveTranscriptEvent,
   CandidateStatusEvent, ImageAnalysisResultEvent,
   SocketEventName, SocketEventMap,
-} from "@trueyy/web-core";
+} from "@trueyy-sdk/web-core";
 ```
 
 ---
 
 ## Versioning & compatibility
 
-`@trueyy/web-core` ships in lockstep with `@trueyy/web`. Major version bumps are coordinated with breaking changes to the underlying `/v1/*` socket contract.
+`@trueyy-sdk/web-core` ships in lockstep with `@trueyy-sdk/web`. Major version bumps are coordinated with breaking changes to the underlying `/v1/*` socket contract.
 
 ---
 

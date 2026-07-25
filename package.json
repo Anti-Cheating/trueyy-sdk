@@ -2,7 +2,7 @@
   "name": "trueyy-sdk",
   "version": "0.0.0",
   "private": true,
-  "description": "Trueyy SDK monorepo (@trueyy/node, @trueyy/web-core, @trueyy/web)",
+  "description": "Trueyy SDK monorepo (@trueyy-sdk/node, @trueyy-sdk/web-core, @trueyy-sdk/web)",
   "scripts": {
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint",

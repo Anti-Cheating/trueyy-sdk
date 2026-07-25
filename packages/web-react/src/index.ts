@@ -25,4 +25,4 @@ export type {
   ImageAnalysisResultEvent,
   ConsentStatusEvent,
   ConsentText,
-} from "@trueyy/web-core";
+} from "@trueyy-sdk/web-core";

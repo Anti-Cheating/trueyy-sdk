@@ -1,35 +1,35 @@
-# @trueyy/web
+# @trueyy-sdk/web
 
 > React components for embedding Trueyy's live interview integrity monitoring into your ATS — drop-in, themable, fully typed.
 
-[![npm](https://img.shields.io/npm/v/@trueyy/web.svg)](https://www.npmjs.com/package/@trueyy/web)
-[![types](https://img.shields.io/npm/types/@trueyy/web.svg)](https://www.npmjs.com/package/@trueyy/web)
+[![npm](https://img.shields.io/npm/v/@trueyy-sdk/web.svg)](https://www.npmjs.com/package/@trueyy-sdk/web)
+[![types](https://img.shields.io/npm/types/@trueyy-sdk/web.svg)](https://www.npmjs.com/package/@trueyy-sdk/web)
 
 > **The Trueyy SDK is two packages** — you'll use **both** for a full integration:
-> **`@trueyy/web`** (React frontend, this one) embeds the live monitoring UI, and
-> **[`@trueyy/node`](https://www.npmjs.com/package/@trueyy/node)** (backend) mints
+> **`@trueyy-sdk/web`** (React frontend, this one) embeds the live monitoring UI, and
+> **[`@trueyy-sdk/node`](https://www.npmjs.com/package/@trueyy-sdk/node)** (backend) mints
 > the tokens it needs + handles webhooks.
 
 This package is for your **frontend** (React 17+). It gives you three drop-in components plus a typed hook surface so you can build a custom UI on top of Trueyy's live data plane.
 
-For your **backend** (where session tokens are minted and webhooks are received), install [`@trueyy/node`](https://www.npmjs.com/package/@trueyy/node).
+For your **backend** (where session tokens are minted and webhooks are received), install [`@trueyy-sdk/node`](https://www.npmjs.com/package/@trueyy-sdk/node).
 
 ---
 
 ## Install
 
 ```bash
-npm install @trueyy/web
+npm install @trueyy-sdk/web
 # or
-pnpm add @trueyy/web
+pnpm add @trueyy-sdk/web
 # or
-yarn add @trueyy/web
+yarn add @trueyy-sdk/web
 ```
 
 Then import the default theme stylesheet **once** (typically in your app entry):
 
 ```ts
-import "@trueyy/web/styles.css";
+import "@trueyy-sdk/web/styles.css";
 ```
 
 If you prefer full control, skip the stylesheet and style the components yourself — every component accepts `className` and theme tokens are CSS variables.
@@ -54,8 +54,8 @@ You almost always wrap content in `<TrueyyProvider>` and put one of the other th
 ### Interviewer's live monitoring page
 
 ```tsx
-import { TrueyyProvider, TrueyyMonitor } from "@trueyy/web";
-import "@trueyy/web/styles.css";
+import { TrueyyProvider, TrueyyMonitor } from "@trueyy-sdk/web";
+import "@trueyy-sdk/web/styles.css";
 
 function InterviewerPage({ interviewerToken }) {
   return (
@@ -63,7 +63,7 @@ function InterviewerPage({ interviewerToken }) {
       token={interviewerToken}
       theme={{ primary: "#3B82F6", radius: "8px" }}
       onTokenExpiring={async () => {
-        // Hit YOUR backend, which calls trueyy.tokens.mint(round_id, role) via @trueyy/node
+        // Hit YOUR backend, which calls trueyy.tokens.mint(round_id, role) via @trueyy-sdk/node
         const res = await fetch("/our-ats/refresh-trueyy-token");
         return res.text();
       }}
@@ -79,7 +79,7 @@ function InterviewerPage({ interviewerToken }) {
 ### Candidate's pre-join page
 
 ```tsx
-import { TrueyyProvider, TrueyyJoin } from "@trueyy/web";
+import { TrueyyProvider, TrueyyJoin } from "@trueyy-sdk/web";
 
 function CandidateJoinPage({ candidateToken, helperToken, zoomUrl }) {
   // The Helper needs its own token. Inject it on window so <TrueyyJoin> can
@@ -101,14 +101,14 @@ function CandidateJoinPage({ candidateToken, helperToken, zoomUrl }) {
 ### Recruiter reviewing a finished interview
 
 ```tsx
-import { TrueyyReplay } from "@trueyy/web";
+import { TrueyyReplay } from "@trueyy-sdk/web";
 
 function ReviewPage({ sessionId }) {
   return (
     <TrueyyReplay
       sessionId={sessionId}
       fetchSessionDetail={async (id) => {
-        // YOUR backend, which calls trueyy.reports.get(round_id) via @trueyy/node
+        // YOUR backend, which calls trueyy.reports.get(round_id) via @trueyy-sdk/node
         const res = await fetch(`/our-ats/sessions/${id}/replay`);
         return res.json();
       }}
@@ -131,8 +131,8 @@ Replay does **not** open a live socket — it reads from your aggregated copy.
                                                           │
    ┌────────────┐    POST /our-ats/schedule    ┌──────────┴──────────┐
    │  Your      │ ─────────────────────────────►  Your ATS Backend   │
-   │  frontend  │                              │  + @trueyy/node     │
-   │  + @trueyy/│ ◄──── candidate_token  ──────│  (holds tk_live_*)  │
+   │  frontend  │                              │  + @trueyy-sdk/node     │
+   │  + @trueyy-sdk/│ ◄──── candidate_token  ──────│  (holds tk_live_*)  │
    │   web      │       interviewer_token      └─────────┬───────────┘
    └────┬───────┘       helper_token                     │
         │                                                │ POST /v1/sessions
@@ -238,7 +238,7 @@ candidates get a valid, versioned, provable consent flow. Two escape hatches:
 For a fully custom flow, use the hook directly:
 
 ```tsx
-import { useConsent } from "@trueyy/web";
+import { useConsent } from "@trueyy-sdk/web";
 
 function MyConsent() {
   const { status, text, agree, decline, revoke, busy } = useConsent();
@@ -246,7 +246,7 @@ function MyConsent() {
 }
 ```
 
-Or the raw client methods (framework-agnostic, `@trueyy/web-core`):
+Or the raw client methods (framework-agnostic, `@trueyy-sdk/web-core`):
 `client.consent.text()`, `.grant(version)`, `.decline()`, `.revoke()`.
 
 ---
@@ -287,7 +287,7 @@ import {
   useRiskStream,
   useWindowResults,
   useTranscriptStream,
-} from "@trueyy/web";
+} from "@trueyy-sdk/web";
 
 function MyCustomMonitor() {
   const client = useTrueyyClient();
@@ -328,7 +328,7 @@ import type {
   WindowResultEvent,
   LiveTranscriptEvent,
   CandidateStatusEvent,
-} from "@trueyy/web";
+} from "@trueyy-sdk/web";
 ```
 
 ---
@@ -359,13 +359,13 @@ Targets evergreen browsers — Chrome, Edge, Firefox, Safari (last 2 versions ea
 
 ## What about Vue / Angular / Svelte?
 
-The data plane lives in [`@trueyy/web-core`](https://www.npmjs.com/package/@trueyy/web-core) and is framework-agnostic. We'd love community-maintained adapters — see the web-core README for the wrapping pattern.
+The data plane lives in [`@trueyy-sdk/web-core`](https://www.npmjs.com/package/@trueyy-sdk/web-core) and is framework-agnostic. We'd love community-maintained adapters — see the web-core README for the wrapping pattern.
 
 ---
 
 ## Versioning & compatibility
 
-`@trueyy/web` ships in lockstep with `@trueyy/web-core`. Both follow the underlying `/v1/*` socket contract — frozen for V1, additive changes only.
+`@trueyy-sdk/web` ships in lockstep with `@trueyy-sdk/web-core`. Both follow the underlying `/v1/*` socket contract — frozen for V1, additive changes only.
 
 ---
 

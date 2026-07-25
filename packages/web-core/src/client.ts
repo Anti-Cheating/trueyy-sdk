@@ -3,7 +3,7 @@ import { consentApi, type ConsentText } from "./consent.js";
 import type { SessionRole, SocketEventName, SocketEventMap } from "./types.js";
 
 export interface TrueyyClientOptions {
-  /** Short-lived session JWT minted by the ATS backend via @trueyy/node. */
+  /** Short-lived session JWT minted by the ATS backend via @trueyy-sdk/node. */
   token: string;
   /** Role encoded in the JWT — declared explicitly for clarity. */
   role: SessionRole;
@@ -11,7 +11,7 @@ export interface TrueyyClientOptions {
   baseUrl?: string;
   /**
    * Called ~30s before the current token expires. Implementation should
-   * fetch a fresh token from the ATS backend (which uses @trueyy/node to
+   * fetch a fresh token from the ATS backend (which uses @trueyy-sdk/node to
    * call refreshToken) and return the new JWT.
    */
   onTokenExpiring?: () => Promise<string>;

@@ -1,13 +1,13 @@
-# @trueyy/node
+# @trueyy-sdk/node
 
 > Trueyy Server SDK for Node.js. Create interviews + rounds, mint session tokens, query reports, verify and process webhooks — from your ATS backend.
 
-[![npm](https://img.shields.io/npm/v/@trueyy/node.svg)](https://www.npmjs.com/package/@trueyy/node)
-[![types](https://img.shields.io/npm/types/@trueyy/node.svg)](https://www.npmjs.com/package/@trueyy/node)
+[![npm](https://img.shields.io/npm/v/@trueyy-sdk/node.svg)](https://www.npmjs.com/package/@trueyy-sdk/node)
+[![types](https://img.shields.io/npm/types/@trueyy-sdk/node.svg)](https://www.npmjs.com/package/@trueyy-sdk/node)
 
 > **The Trueyy SDK is two packages** — you'll use **both** for a full integration:
-> **`@trueyy/node`** (backend, this one) mints tokens + handles webhooks, and
-> **[`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web)** (React frontend)
+> **`@trueyy-sdk/node`** (backend, this one) mints tokens + handles webhooks, and
+> **[`@trueyy-sdk/web`](https://www.npmjs.com/package/@trueyy-sdk/web)** (React frontend)
 > embeds the live monitoring UI.
 
 This package is for your **backend**. It holds your `tk_live_*` master API key, talks to `https://api.trueyy.com/v1/*`, and exposes:
@@ -19,18 +19,18 @@ This package is for your **backend**. It holds your `tk_live_*` master API key, 
 - **Tokens** — mint short-lived browser JWTs for embedding the candidate/interviewer/helper UI.
 - **Webhook verification** — Express-compatible middleware that validates `X-Trueyy-Signature`, rejects replays, and parses the event.
 
-For your **frontend** (where the interviewer and candidate live), install [`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web) instead.
+For your **frontend** (where the interviewer and candidate live), install [`@trueyy-sdk/web`](https://www.npmjs.com/package/@trueyy-sdk/web) instead.
 
 ---
 
 ## Install
 
 ```bash
-npm install @trueyy/node
+npm install @trueyy-sdk/node
 # or
-pnpm add @trueyy/node
+pnpm add @trueyy-sdk/node
 # or
-yarn add @trueyy/node
+yarn add @trueyy-sdk/node
 ```
 
 Requires **Node ≥ 18** (native `fetch`, `AbortController`, `crypto`). ESM and CommonJS exports both supported.
@@ -44,7 +44,7 @@ The end-to-end flow: **invite the interviewer → create an interview (with its 
 ### 1. Configure
 
 ```ts
-import { Trueyy } from "@trueyy/node";
+import { Trueyy } from "@trueyy-sdk/node";
 
 const trueyy = new Trueyy({
   apiKey: process.env.TRUEYY_API_KEY!,        // tk_live_… (production) or tk_test_… (sandbox)
@@ -106,9 +106,9 @@ const helper       = await trueyy.tokens.mint(round_id, "helper");
 
 - `candidate.token` → the candidate's pre-join page
 - `interviewerT.token` → the interviewer's monitoring page
-- `helper.token` → handed to the local Helper daemon via `@trueyy/web-core`'s `helperJoin`
+- `helper.token` → handed to the local Helper daemon via `@trueyy-sdk/web-core`'s `helperJoin`
 
-The frontend uses these with [`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web).
+The frontend uses these with [`@trueyy-sdk/web`](https://www.npmjs.com/package/@trueyy-sdk/web).
 
 ### 5. Receive webhook events
 
@@ -294,7 +294,7 @@ const { token, expires_at, role } = await trueyy.tokens.mint(
 );
 ```
 
-Mint a fresh token whenever the previous one nears expiry; the browser-side client (`@trueyy/web-core`) calls back to your backend to fetch one via this method.
+Mint a fresh token whenever the previous one nears expiry; the browser-side client (`@trueyy-sdk/web-core`) calls back to your backend to fetch one via this method.
 
 ---
 
@@ -374,7 +374,7 @@ import {
   TrueyyRateLimitError,
   TrueyyServerError,
   TrueyyError,
-} from "@trueyy/node";
+} from "@trueyy-sdk/node";
 
 try {
   await trueyy.interviews.create(input);
@@ -423,14 +423,14 @@ import type {
   // Webhook
   WebhookEvent,
   WebhookEventType,
-} from "@trueyy/node";
+} from "@trueyy-sdk/node";
 ```
 
 ---
 
 ## Versioning & compatibility
 
-V1 contract is **frozen** — additive changes only. Breaking changes will ship under `@trueyy/node@2` against a future `/v2/*` API.
+V1 contract is **frozen** — additive changes only. Breaking changes will ship under `@trueyy-sdk/node@2` against a future `/v2/*` API.
 
 ---
 

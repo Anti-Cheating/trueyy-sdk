@@ -1,11 +1,11 @@
 /// <reference types="vite/client" />
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "@trueyy/web/styles.css";
-import { TrueyyProvider, TrueyyMonitor } from "@trueyy/web";
+import "@trueyy-sdk/web/styles.css";
+import { TrueyyProvider, TrueyyMonitor } from "@trueyy-sdk/web";
 
 // In a real ATS, you'd fetch these tokens from your backend (which uses
-// @trueyy/node to mint them). Here we read from URL params for demo.
+// @trueyy-sdk/node to mint them). Here we read from URL params for demo.
 const url = new URL(window.location.href);
 const interviewerToken = url.searchParams.get("interviewer_token") ?? "";
 

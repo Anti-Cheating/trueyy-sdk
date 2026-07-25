@@ -1,5 +1,5 @@
 {
-  "name": "@trueyy/node",
+  "name": "@trueyy-sdk/node",
   "version": "1.0.0",
   "description": "Trueyy Server SDK for Node.js — mint session tokens, query sessions, handle webhooks.",
   "license": "MIT",

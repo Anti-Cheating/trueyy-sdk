@@ -6,7 +6,7 @@ import path from "node:path";
 
 // These suites run against your LOCAL Cortex checkout — not npm, not a deploy.
 // By default Cortex is expected as a sibling of trueyy-sdk; override with the
-// CORTEX_DIR env var (e.g. `CORTEX_DIR=/path/to/Cortex pnpm -F @trueyy/node test`).
+// CORTEX_DIR env var (e.g. `CORTEX_DIR=/path/to/Cortex pnpm -F @trueyy-sdk/node test`).
 const SDK_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const CORTEX_DIR = process.env.CORTEX_DIR ?? path.resolve(SDK_ROOT, "../Cortex");
 const PORT = Number(process.env.SDK_TEST_CORTEX_PORT ?? 4567);
@@ -19,7 +19,7 @@ function assertCortex(): void {
       `Cannot find the Cortex backend at ${CORTEX_DIR}.\n` +
         `These SDK tests boot the real Cortex server. Either check out Cortex as a ` +
         `sibling of trueyy-sdk, or set CORTEX_DIR to its path:\n` +
-        `  CORTEX_DIR=/path/to/Cortex pnpm -F @trueyy/node test`,
+        `  CORTEX_DIR=/path/to/Cortex pnpm -F @trueyy-sdk/node test`,
     );
   }
 }
