@@ -1,6 +1,6 @@
 {
   "name": "@trueyy-sdk/web-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Framework-agnostic primitives for Trueyy in the browser.",
   "license": "MIT",
   "homepage": "https://github.com/Anti-Cheating/trueyy-sdk/tree/main/packages/web-core#readme",

@@ -83,7 +83,7 @@ import { TrueyyProvider, TrueyyJoin } from "@trueyy-sdk/web";
 
 function CandidateJoinPage({ candidateToken, helperToken, zoomUrl }) {
   // The Helper needs its own token. Inject it on window so <TrueyyJoin> can
-  // hand it to the local daemon. (A future API will accept it as a prop.)
+  // hand it to the local Helper. (A future API will accept it as a prop.)
   (window as any).__TRUEYY_HELPER_TOKEN__ = helperToken;
 
   return (
@@ -138,7 +138,7 @@ Replay does **not** open a live socket — it reads from your aggregated copy.
         │                                                │ POST /v1/sessions
         │                                                │ (returns 3 JWTs)
         │  <TrueyyProvider token={…}>                    ▼
-        │  opens WSS to Cortex                Cortex mints JWTs (5min)
+        │  opens WSS to Trueyy Cloud                Trueyy Cloud mints JWTs (5min)
         │                                                │
         └───── WSS auth: Bearer <session-JWT> ───────────┘
 ```
@@ -184,7 +184,7 @@ You can also override `--trueyy-bg`, `--trueyy-text`, `--trueyy-muted`, `--truey
 Renders three columns:
 1. **Risk pulses** — incoming alerts color-coded by severity.
 2. **Window analysis** — every 30 seconds, the LLM-synthesized risk + score + one-line summary.
-3. **Transcript** — Deepgram live transcript, two-speaker.
+3. **Transcript** — live transcript, two-speaker.
 
 A **consent banner** appears above the columns when the candidate withdraws
 (or declines) consent — capture has already stopped server-side at that point.
@@ -213,11 +213,11 @@ Consent first, then 3 steps:
 
 0. **Consent (GDPR Art. 7)** — before anything else, the candidate is shown the
    monitoring consent text and must agree. Capture is **hard-gated server-side**:
-   Cortex refuses all candidate data for a session without an open consent row,
+   no candidate data is captured for a session until consent is granted,
    so this is a compliance requirement, not just UI.
 1. **Install the helper** — auto-detects presence; offers per-OS download if missing.
-2. **Connect helper** — POSTs the `helper_token` to `127.0.0.1:48123` so the daemon can talk to Cortex.
-3. **Open meeting** — opens `meetingUrl` in a new tab and tells the daemon the candidate is in.
+2. **Connect helper** — hands the Helper its token so it can start on the candidate's machine.
+3. **Open meeting** — opens `meetingUrl` in a new tab and signals that the candidate has joined.
 
 A **"Withdraw monitoring consent"** control is shown throughout the session
 (GDPR Art. 7(3)). Withdrawal notifies the interviewer immediately and stops
@@ -232,7 +232,7 @@ candidates get a valid, versioned, provable consent flow. Two escape hatches:
   the `useConsent()` state (`status`, `text`, `agree`, `decline`, `revoke`, `busy`).
 - **`consentHandledExternally`** — your ATS collects consent itself and calls
   `client.consent.grant(version)` directly. This only **hides** the built-in UI;
-  Cortex still blocks capture until consent is granted, so **you accept the
+  Trueyy Cloud still blocks capture until consent is granted, so **you accept the
   compliance responsibility** for showing informed consent before granting.
 
 For a fully custom flow, use the hook directly:
@@ -260,7 +260,7 @@ Or the raw client methods (framework-agnostic, `@trueyy-sdk/web-core`):
 />
 ```
 
-The `fetchSessionDetail` callback is your call — typically a fetch to your own backend that aggregates Cortex data + your own stored webhook history.
+The `fetchSessionDetail` callback is your call — typically a fetch to your own backend that aggregates Trueyy Cloud data + your own stored webhook history.
 
 Expected shape:
 
@@ -360,12 +360,6 @@ Targets evergreen browsers — Chrome, Edge, Firefox, Safari (last 2 versions ea
 ## What about Vue / Angular / Svelte?
 
 The data plane lives in [`@trueyy-sdk/web-core`](https://www.npmjs.com/package/@trueyy-sdk/web-core) and is framework-agnostic. We'd love community-maintained adapters — see the web-core README for the wrapping pattern.
-
----
-
-## Versioning & compatibility
-
-`@trueyy-sdk/web` ships in lockstep with `@trueyy-sdk/web-core`. Both follow the underlying `/v1/*` socket contract — frozen for V1, additive changes only.
 
 ---
 

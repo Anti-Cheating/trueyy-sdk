@@ -1,6 +1,6 @@
 {
   "name": "@trueyy-sdk/web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React components for embedding Trueyy interview monitoring.",
   "license": "MIT",
   "homepage": "https://github.com/Anti-Cheating/trueyy-sdk/tree/main/packages/web-react#readme",

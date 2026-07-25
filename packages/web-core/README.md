@@ -7,7 +7,7 @@
 
 > **Most consumers should NOT install this directly.** If you use React, install [`@trueyy-sdk/web`](https://www.npmjs.com/package/@trueyy-sdk/web) — it bundles this core and adds React components.
 
-This package is the foundation: a stateful WebSocket client, the local Helper bridge over `127.0.0.1:48123`, and TypeScript types — all with **zero UI dependencies**. It exists so Trueyy's framework adapters (`@trueyy-sdk/web` for React, future `@trueyy-sdk/web-vue`, `@trueyy-sdk/web-svelte`, etc.) can share the same browser-side runtime without duplicating logic.
+This package is the foundation: a stateful WebSocket client, the local Helper bridge, and TypeScript types — all with **zero UI dependencies**. It exists so Trueyy's framework adapters (`@trueyy-sdk/web` for React, future `@trueyy-sdk/web-vue`, `@trueyy-sdk/web-svelte`, etc.) can share the same browser-side runtime without duplicating logic.
 
 ## When you'd install this directly
 
@@ -33,7 +33,7 @@ Runs in any modern browser. Requires `fetch`, `WebSocket`, `crypto.subtle`. No N
 
 ### 1. `TrueyyClient` — typed live data client
 
-Holds a session-scoped JWT, connects to Cortex via WebSocket, auto-refreshes the token before expiry, and exposes a typed event subscription API.
+Holds a session-scoped JWT, connects to Trueyy Cloud via WebSocket, auto-refreshes the token before expiry, and exposes a typed event subscription API.
 
 ```ts
 import { TrueyyClient } from "@trueyy-sdk/web-core";
@@ -79,9 +79,9 @@ unsubRisk();
 client.disconnect();
 ```
 
-### 2. `helperBridge` — talk to the local Helper daemon
+### 2. `helperBridge` — talk to the local Helper
 
-The Trueyy Helper is a small native daemon that runs on the **candidate's** machine and listens on `127.0.0.1:48123`. It owns OS-level capture (mic with echo cancellation, screen capture, app detection, keystroke timing) that browsers can't do.
+The Trueyy Helper is a small native app the candidate installs; it captures the signals a browser can't. These helpers let your frontend detect it, hand it a token, and track its status.
 
 ```ts
 import {
@@ -94,7 +94,7 @@ import {
   HELPER_DOWNLOAD_URL_WIN,
 } from "@trueyy-sdk/web-core";
 
-// Is the daemon installed and running?
+// Is the Helper installed and running?
 const ok = await detectHelper();
 if (!ok) {
   // Send the candidate to the right installer
@@ -102,8 +102,8 @@ if (!ok) {
   window.location.href = url;
 }
 
-// Hand the Helper a helper-JWT + Cortex URL — it opens its own WSS
-// from there and starts streaming capture data. The helper token is
+// Hand the Helper a helper-JWT + Trueyy Cloud URL — it connects from
+// there and starts sending its data. The helper token is
 // minted on your backend via @trueyy-sdk/node:
 //   trueyy.tokens.mint(round_id, "helper") → { token, expires_at, role }
 // and `sessionId` is the round's id (round_id).
@@ -226,12 +226,6 @@ import type {
   SocketEventName, SocketEventMap,
 } from "@trueyy-sdk/web-core";
 ```
-
----
-
-## Versioning & compatibility
-
-`@trueyy-sdk/web-core` ships in lockstep with `@trueyy-sdk/web`. Major version bumps are coordinated with breaking changes to the underlying `/v1/*` socket contract.
 
 ---
 

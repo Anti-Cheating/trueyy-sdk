@@ -106,7 +106,7 @@ const helper       = await trueyy.tokens.mint(round_id, "helper");
 
 - `candidate.token` → the candidate's pre-join page
 - `interviewerT.token` → the interviewer's monitoring page
-- `helper.token` → handed to the local Helper daemon via `@trueyy-sdk/web-core`'s `helperJoin`
+- `helper.token` → handed to the candidate's local Helper via `@trueyy-sdk/web-core`'s `helperJoin`
 
 The frontend uses these with [`@trueyy-sdk/web`](https://www.npmjs.com/package/@trueyy-sdk/web).
 
@@ -148,7 +148,7 @@ new Trueyy({
 });
 ```
 
-Override `baseUrl` only for self-hosted deployments. Override `fetchImpl` to inject a polyfill or instrumentation (e.g. `undici`, OpenTelemetry-wrapped fetch).
+Override `baseUrl` only if you're pointing at a custom Trueyy endpoint. Override `fetchImpl` to inject a polyfill or instrumentation (e.g. `undici`, OpenTelemetry-wrapped fetch).
 
 ---
 
@@ -425,12 +425,6 @@ import type {
   WebhookEventType,
 } from "@trueyy-sdk/node";
 ```
-
----
-
-## Versioning & compatibility
-
-V1 contract is **frozen** — additive changes only. Breaking changes will ship under `@trueyy-sdk/node@2` against a future `/v2/*` API.
 
 ---
 
