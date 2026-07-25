@@ -5,6 +5,11 @@
 [![npm](https://img.shields.io/npm/v/@trueyy/node.svg)](https://www.npmjs.com/package/@trueyy/node)
 [![types](https://img.shields.io/npm/types/@trueyy/node.svg)](https://www.npmjs.com/package/@trueyy/node)
 
+> **The Trueyy SDK is two packages** — you'll use **both** for a full integration:
+> **`@trueyy/node`** (backend, this one) mints tokens + handles webhooks, and
+> **[`@trueyy/web`](https://www.npmjs.com/package/@trueyy/web)** (React frontend)
+> embeds the live monitoring UI.
+
 This package is for your **backend**. It holds your `tk_live_*` master API key, talks to `https://api.trueyy.com/v1/*`, and exposes:
 
 - **Interviews** — create an interview + its first round, list, fetch, add more rounds, cancel.
@@ -45,6 +50,12 @@ const trueyy = new Trueyy({
   apiKey: process.env.TRUEYY_API_KEY!,        // tk_live_… (production) or tk_test_… (sandbox)
 });
 ```
+
+> **Getting your API key:** Generate one in the Trueyy dashboard at
+> [app.trueyy.com](https://app.trueyy.com) → **Settings → API Tokens**. API
+> access is included on **Growth, annual Starter, and Enterprise** plans. If you
+> don't see the API Tokens option, your plan doesn't include SDK access yet —
+> [contact us](https://app.trueyy.com) to enable it.
 
 ### 2. Invite the interviewer
 

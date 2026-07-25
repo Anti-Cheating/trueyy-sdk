@@ -5,6 +5,11 @@
 [![npm](https://img.shields.io/npm/v/@trueyy/web.svg)](https://www.npmjs.com/package/@trueyy/web)
 [![types](https://img.shields.io/npm/types/@trueyy/web.svg)](https://www.npmjs.com/package/@trueyy/web)
 
+> **The Trueyy SDK is two packages** — you'll use **both** for a full integration:
+> **`@trueyy/web`** (React frontend, this one) embeds the live monitoring UI, and
+> **[`@trueyy/node`](https://www.npmjs.com/package/@trueyy/node)** (backend) mints
+> the tokens it needs + handles webhooks.
+
 This package is for your **frontend** (React 17+). It gives you three drop-in components plus a typed hook surface so you can build a custom UI on top of Trueyy's live data plane.
 
 For your **backend** (where session tokens are minted and webhooks are received), install [`@trueyy/node`](https://www.npmjs.com/package/@trueyy/node).
